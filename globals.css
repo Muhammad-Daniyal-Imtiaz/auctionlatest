@@ -1,26 +1,170 @@
 @import "tailwindcss";
 
-/* :root {
-  --background: #ffffff;
-  --foreground: #171717;
-} */
+/* Global CSS */
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
+/* Dark Mode */
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: hsl(var(--background-dark));
+    --foreground: hsl(var(--foreground-dark));
+    --card: hsl(var(--card-dark));
+    --card-foreground: hsl(var(--card-foreground-dark));
+    --popover: hsl(var(--popover-dark));
+    --popover-foreground: hsl(var(--popover-foreground-dark));
+    --primary: hsl(var(--primary-dark));
+    --primary-foreground: hsl(var(--primary-foreground-dark));
+    --secondary: hsl(var(--secondary-dark));
+    --secondary-foreground: hsl(var(--secondary-foreground-dark));
+    --muted: hsl(var(--muted-dark));
+    --muted-foreground: hsl(var(--muted-foreground-dark));
+    --accent: hsl(var(--accent-dark));
+    --accent-foreground: hsl(var(--accent-foreground-dark));
+    --destructive: hsl(var(--destructive-dark));
+    --destructive-foreground: hsl(var(--destructive-foreground-dark));
+    --border: hsl(var(--border-dark));
+    --input: hsl(var(--input-dark));
+    --ring: hsl(var(--ring-dark));
+    --chart-1: hsl(var(--chart-1-dark));
+    --chart-2: hsl(var(--chart-2-dark));
+    --chart-3: hsl(var(--chart-3-dark));
+    --chart-4: hsl(var(--chart-4-dark));
+    --chart-5: hsl(var(--chart-5-dark));
+    --sidebar-background: hsl(var(--sidebar-background-dark));
+    --sidebar-foreground: hsl(var(--sidebar-foreground-dark));
+    --sidebar-primary: hsl(var(--sidebar-primary-dark));
+    --sidebar-primary-foreground: hsl(var(--sidebar-primary-foreground-dark));
+    --sidebar-accent: hsl(var(--sidebar-accent-dark));
+    --sidebar-accent-foreground: hsl(var(--sidebar-accent-foreground-dark));
+    --sidebar-border: hsl(var(--sidebar-border-dark));
+    --sidebar-ring: hsl(var(--sidebar-ring-dark));
   }
 }
 
-/* body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
-} */
+/* Border Radius */
+:root {
+  --radius: 8px; /* Example value, adjust as needed */
+}
+
+.rounded-lg {
+  border-radius: var(--radius);
+}
+
+.rounded-md {
+  border-radius: calc(var(--radius) - 2px);
+}
+
+.rounded-sm {
+  border-radius: calc(var(--radius) - 4px);
+}
+
+/* Colors */
+:root {
+  --background: hsl(var(--background));
+  --foreground: hsl(var(--foreground));
+  --card: hsl(var(--card));
+  --card-foreground: hsl(var(--card-foreground));
+  --popover: hsl(var(--popover));
+  --popover-foreground: hsl(var(--popover-foreground));
+  --primary: hsl(var(--primary));
+  --primary-foreground: hsl(var(--primary-foreground));
+  --secondary: hsl(var(--secondary));
+  --secondary-foreground: hsl(var(--secondary-foreground));
+  --muted: hsl(var(--muted));
+  --muted-foreground: hsl(var(--muted-foreground));
+  --accent: hsl(var(--accent));
+  --accent-foreground: hsl(var(--accent-foreground));
+  --destructive: hsl(var(--destructive));
+  --destructive-foreground: hsl(var(--destructive-foreground));
+  --border: hsl(var(--border));
+  --input: hsl(var(--input));
+  --ring: hsl(var(--ring));
+  --chart-1: hsl(var(--chart-1));
+  --chart-2: hsl(var(--chart-2));
+  --chart-3: hsl(var(--chart-3));
+  --chart-4: hsl(var(--chart-4));
+  --chart-5: hsl(var(--chart-5));
+  --sidebar-background: hsl(var(--sidebar-background));
+  --sidebar-foreground: hsl(var(--sidebar-foreground));
+  --sidebar-primary: hsl(var(--sidebar-primary));
+  --sidebar-primary-foreground: hsl(var(--sidebar-primary-foreground));
+  --sidebar-accent: hsl(var(--sidebar-accent));
+  --sidebar-accent-foreground: hsl(var(--sidebar-accent-foreground));
+  --sidebar-border: hsl(var(--sidebar-border));
+  --sidebar-ring: hsl(var(--sidebar-ring));
+}
+
+/* Keyframes */
+@keyframes accordion-down {
+  from {
+    height: 0;
+  }
+  to {
+    height: var(--radix-accordion-content-height);
+  }
+}
+
+@keyframes accordion-up {
+  from {
+    height: var(--radix-accordion-content-height);
+  }
+  to {
+    height: 0;
+  }
+}
+
+/* Animations */
+.accordion-down {
+  animation: accordion-down 0.2s ease-out;
+}
+
+.accordion-up {
+  animation: accordion-up 0.2s ease-out;
+}
+
+/* Ensure the main container fills the screen without overflow */
+/* Ensure the main container fills the screen without overflow */
+.flex.h-screen.w-full {
+  display: flex;
+  height: 100vh; /* Full viewport height */
+  width: 100vw;  /* Full viewport width */
+  overflow: hidden; /* Prevent overflow */
+}
+
+/* Sidebar for mobile and desktop */
+aside {
+  width: 100%; /* Full width for mobile */
+  max-width: 256px; /* Max width for desktop */
+  transition: width 0.3s ease; /* Smooth transition for width changes */
+}
+
+aside.w-64 {
+  width: 256px; /* Fixed width for expanded sidebar */
+}
+
+aside.w-20 {
+  width: 80px; /* Fixed width for collapsed sidebar */
+}
+
+/* Main content area */
+.flex-1.flex.flex-col.overflow-hidden.w-full {
+  flex-grow: 1; /* Grow to fill remaining space */
+  overflow: auto; /* Allow scrolling if content overflows */
+  width: calc(100vw - 256px); /* Adjust width for sidebar */
+  max-width: calc(100vw - 256px); /* Ensure it doesn't exceed the adjusted width */
+}
+
+/* Header and main content */
+header, main {
+  width: 100%; /* Ensure full width */
+}
+
+/* Additional adjustments for responsiveness */
+@media (max-width: 1024px) {
+  aside {
+    width: 100%; /* Full width for smaller screens */
+  }
+
+  .flex-1.flex.flex-col.overflow-hidden.w-full {
+    width: 100%; /* Full width for smaller screens */
+  }
+}

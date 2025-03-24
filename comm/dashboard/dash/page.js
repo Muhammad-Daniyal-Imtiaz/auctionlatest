@@ -53,7 +53,7 @@ import { Label } from "@/components/ui/label"
 const stats = [
   {
     name: "Total Revenue",
-    value: "$45,231.89",
+    value: "\$45,231.89",
     icon: DollarSign,
     change: "+20.1%",
     trend: "up",
@@ -94,7 +94,7 @@ const recentOrders = [
     id: "ORD-001",
     customer: "Sarah Johnson",
     date: "2 hours ago",
-    amount: "$125.00",
+    amount: "\$125.00",
     status: "Completed",
     items: 3,
     paymentMethod: "Credit Card",
@@ -104,7 +104,7 @@ const recentOrders = [
     id: "ORD-002",
     customer: "Michael Chen",
     date: "5 hours ago",
-    amount: "$89.99",
+    amount: "\$89.99",
     status: "Processing",
     items: 1,
     paymentMethod: "PayPal",
@@ -114,7 +114,7 @@ const recentOrders = [
     id: "ORD-003",
     customer: "Emma Wilson",
     date: "Yesterday",
-    amount: "$245.50",
+    amount: "\$245.50",
     status: "Completed",
     items: 4,
     paymentMethod: "Credit Card",
@@ -124,7 +124,7 @@ const recentOrders = [
     id: "ORD-004",
     customer: "James Rodriguez",
     date: "Yesterday",
-    amount: "$32.99",
+    amount: "\$32.99",
     status: "Shipped",
     items: 1,
     paymentMethod: "Credit Card",
@@ -136,7 +136,7 @@ const recommendedProducts = [
   {
     id: 1,
     name: "Wireless Headphones",
-    price: "$129.99",
+    price: "\$129.99",
     rating: 4.8,
     image: "/placeholder.svg?height=200&width=300",
     sales: 245,
@@ -148,7 +148,7 @@ const recommendedProducts = [
   {
     id: 2,
     name: "Smart Watch",
-    price: "$199.99",
+    price: "\$199.99",
     rating: 4.5,
     image: "/placeholder.svg?height=200&width=300",
     sales: 187,
@@ -160,7 +160,7 @@ const recommendedProducts = [
   {
     id: 3,
     name: "Bluetooth Speaker",
-    price: "$79.99",
+    price: "\$79.99",
     rating: 4.7,
     image: "/placeholder.svg?height=200&width=300",
     sales: 156,
@@ -172,7 +172,7 @@ const recommendedProducts = [
   {
     id: 4,
     name: "Gaming Console",
-    price: "$499.99",
+    price: "\$499.99",
     rating: 4.9,
     image: "/placeholder.svg?height=200&width=300",
     sales: 98,
@@ -184,7 +184,7 @@ const recommendedProducts = [
   {
     id: 5,
     name: "Digital Camera",
-    price: "$349.99",
+    price: "\$349.99",
     rating: 4.6,
     image: "/placeholder.svg?height=200&width=300",
     sales: 112,
@@ -802,7 +802,7 @@ export default function Dashboard() {
                               </div>
                             </div>
                             <div className="mt-2">
-                              <Progress
+                              <CustomProgress
                                 value={product.stock}
                                 max={100}
                                 className="h-1.5 bg-slate-200 dark:bg-slate-700"
@@ -1074,6 +1074,20 @@ export default function Dashboard() {
   )
 }
 
+// Custom Progress Component
+const CustomProgress = ({ value, max, className, indicatorClassName }) => {
+  const progressPercentage = (value / max) * 100;
+
+  return (
+    <div className={className}>
+      <div
+        className={`h-full ${indicatorClassName}`}
+        style={{ width: `${progressPercentage}%` }}
+      ></div>
+    </div>
+  );
+};
+
 // Missing icon components
 function MoreHorizontalIcon(props) {
   return (
@@ -1160,4 +1174,3 @@ function UserPlus(props) {
     </svg>
   )
 }
-
