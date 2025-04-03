@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ShoppingCart, Heart, Star, ShoppingBag, Edit, Eye, Gift, Settings, Lock, LogOut, Mail, Phone, Calendar } from 'lucide-react'; // Importing icons from Lucide
+import { ShoppingCart, Heart, Star, ShoppingBag, Edit, Eye, Gift, Settings, Lock, LogOut, Mail, Phone, Calendar } from 'lucide-react';
 
 export default function HomePage() {
   const [activeTab, setActiveTab] = useState("purchases");
@@ -139,9 +139,9 @@ export default function HomePage() {
   };
 
   return (
-    <div className="space-y-6 text-gray-800">
+    <div className="w-full h-full min-w-0 space-y-6 text-gray-800">
       {/* Hero Section */}
-      <div className="relative overflow-hidden rounded-xl mb-8">
+      <div className="relative overflow-hidden rounded-xl">
         <div className="bg-gradient-to-r from-indigo-900 via-blue-800 to-indigo-700 p-8 md:p-12">
           <div className="max-w-3xl">
             <h1 className="text-3xl md:text-4xl font-bold text-white mb-4">
@@ -186,7 +186,7 @@ export default function HomePage() {
       </div>
 
       {/* Main content */}
-      <div className="grid gap-6 lg:grid-cols-7">
+      <div className="grid gap-6 lg:grid-cols-7 w-full min-w-0">
         {/* User Profile */}
         <Card className="lg:col-span-3 hover:shadow-md transition-all">
           <CardHeader className="pb-3">

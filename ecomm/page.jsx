@@ -1,11 +1,12 @@
 "use client";
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Badge } from "@/components/ui/badge";
-import HomePage from "./Homepage.jsx";
+import { Button } from "@/components/ui/button.jsx";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar.jsx";
+import { ScrollArea } from "@/components/ui/scroll-area.jsx";
+import { Badge } from "@/components/ui/badge.jsx";
+import HomePage from "./Homepage.jsx.js";
 import DashboardPage from "./DashboardPage.jsx";
+
 
 const navItems = [
   { title: "Home", icon: "ri-home-line" },
@@ -36,70 +37,95 @@ export default function RootLayout() {
   };
 
   return (
-    <div className="flex h-screen bg-slate-50 overflow-hidden">
+    <div style={{ display: 'flex', height: '100vh', width: '100vw' }}>
       {/* Mobile sidebar backdrop */}
       {isMobileSidebarOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/30 lg:hidden"
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 40,
+            background: 'rgba(0, 0, 0, 0.3)',
+            display: 'none',
+          }}
           onClick={() => setIsMobileSidebarOpen(false)}
         ></div>
       )}
 
       {/* Sidebar for mobile */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-72 bg-gradient-to-b from-indigo-900 to-blue-900 text-white shadow-xl transform transition-transform duration-300 ease-in-out lg:hidden ${
-          isMobileSidebarOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
+        style={{
+          position: 'fixed',
+          inset: '0 auto 0 0',
+          width: '18rem',
+          background: 'linear-gradient(to bottom, #6366f1, #4361ee)',
+          color: 'white',
+          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+          transform: isMobileSidebarOpen ? 'translateX(0)' : 'translateX(-100%)',
+          transition: 'transform 0.3s ease-in-out',
+          zIndex: 50,
+          display: 'flex',
+          flexDirection: 'column',
+          height: '100%',
+        }}
       >
-        <div className="flex flex-col h-full">
-          <div className="flex items-center justify-between p-4 border-b border-blue-800/50">
-            <div className="flex items-center space-x-2">
-              <div className="rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 p-2">
-                <i className="ri-shopping-cart-2-line text-lg"></i>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <div style={{ background: 'linear-gradient(to right, #805ad5, #6b72ef)', padding: '0.5rem', borderRadius: '50%' }}>
+                <i className="ri-shopping-cart-2-line" style={{ fontSize: '1.25rem' }}></i>
               </div>
-              <span className="text-xl font-bold tracking-tight text-white">Shopcove</span>
+              <span style={{ fontSize: '1.25rem', fontWeight: 'bold' }}>Shopcove</span>
             </div>
             <Button
               variant="ghost"
               size="icon"
-              className="text-white hover:bg-blue-800/50 rounded-full"
+              style={{ color: 'white', borderRadius: '50%', background: 'rgba(255, 255, 255, 0.1)' }}
               onClick={() => setIsMobileSidebarOpen(false)}
             >
-              <i className="ri-close-line text-lg"></i>
+              <i className="ri-close-line" style={{ fontSize: '1.25rem' }}></i>
             </Button>
           </div>
 
-          <div className="p-4 border-b border-blue-800/50">
-            <div className="flex items-center space-x-3">
-              <Avatar className="h-10 w-10 border-2 border-blue-500">
+          <div style={{ padding: '1rem', borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <Avatar style={{ height: '2.5rem', width: '2.5rem', border: '2px solid #805ad5' }}>
                 <AvatarImage src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&h=200&fit=crop&auto=format" />
                 <AvatarFallback>JW</AvatarFallback>
               </Avatar>
               <div>
-                <p className="font-medium text-white">Jessica Wilson</p>
-                <p className="text-xs text-gray-300">Premium Member</p>
+                <p style={{ fontWeight: 'bold' }}>Jessica Wilson</p>
+                <p style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.6)' }}>Premium Member</p>
               </div>
             </div>
           </div>
 
-          <ScrollArea className="flex-1 py-4">
-            <nav className="px-3 space-y-1">
+          <ScrollArea style={{ flex: 1, padding: '1rem' }}>
+            <nav style={{ space: '1rem 0' }}>
               {navItems.map((item, index) => (
                 <div
                   key={index}
                   onClick={() => setActiveComponent(item.title)}
-                  className={`flex items-center justify-between rounded-lg px-4 py-3 text-sm font-medium transition-colors cursor-pointer relative ${
-                    activeComponent === item.title
-                      ? "bg-blue-800/70 text-white"
-                      : "text-gray-300 hover:bg-blue-800/50 hover:text-white"
-                  }`}
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    padding: '0.75rem 1rem',
+                    fontSize: '0.875rem',
+                    fontWeight: 'medium',
+                    cursor: 'pointer',
+                    background: activeComponent === item.title ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
+                    color: activeComponent === item.title ? 'white' : 'rgba(255, 255, 255, 0.6)',
+                    borderRadius: '0.5rem',
+                    transition: 'background 0.3s, color 0.3s',
+                  }}
                 >
-                  <div className="flex items-center">
-                    <i className={`${item.icon} text-lg mr-3`}></i>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <i className={item.icon} style={{ fontSize: '1.25rem' }}></i>
                     <span>{item.title}</span>
                   </div>
                   {item.badge && (
-                    <Badge className="bg-blue-500 hover:bg-blue-600 text-xs">
+                    <Badge style={{ background: '#805ad5', color: 'white', fontSize: '0.75rem', padding: '0.25rem 0.5rem', borderRadius: '0.25rem' }}>
                       {item.badge}
                     </Badge>
                   )}
@@ -108,16 +134,16 @@ export default function RootLayout() {
             </nav>
           </ScrollArea>
 
-          <div className="p-4 border-t border-blue-800/50">
-            <div className="bg-blue-800/70 rounded-xl p-4">
-              <div className="flex items-center space-x-2 text-gray-300 mb-3">
-                <i className="ri-customer-service-line text-lg"></i>
-                <span className="font-medium">Need help?</span>
+          <div style={{ padding: '1rem', borderTop: '1px solid rgba(255, 255, 255, 0.1)' }}>
+            <div style={{ background: 'rgba(128, 90, 213, 0.7)', padding: '1rem', borderRadius: '0.5rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'rgba(255, 255, 255, 0.6)', marginBottom: '0.75rem' }}>
+                <i className="ri-customer-service-line" style={{ fontSize: '1.25rem' }}></i>
+                <span style={{ fontWeight: 'bold' }}>Need help?</span>
               </div>
-              <p className="text-sm text-gray-300 mb-3">
+              <p style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.6)', marginBottom: '0.75rem' }}>
                 Our support team is ready to assist you with any questions.
               </p>
-              <Button size="sm" className="w-full bg-white text-blue-900 hover:bg-blue-100">
+              <Button size="sm" style={{ width: '100%', background: 'white', color: '#4361ee', borderRadius: '0.5rem' }}>
                 Contact Support
               </Button>
             </div>
@@ -127,81 +153,94 @@ export default function RootLayout() {
 
       {/* Sidebar for desktop */}
       <aside
-        className={`hidden lg:block h-screen bg-gradient-to-b from-indigo-900 to-blue-900 text-white transition-all duration-300 flex-shrink-0 shadow-xl ${
-          isSidebarCollapsed ? "w-20" : "w-72"
-        }`}
+        style={{
+          display: 'none',
+          position: 'fixed',
+          inset: '0 auto 0 0',
+          background: 'linear-gradient(to bottom, #6366f1, #4361ee)',
+          color: 'white',
+          transition: 'width 0.3s ease-in-out',
+          width: isSidebarCollapsed ? '5rem' : '18rem',
+          zIndex: 50,
+          height: '100%',
+        }}
       >
-        <div className="flex flex-col h-full">
-          <div className={`flex items-center p-4 border-b border-blue-800/50 ${isSidebarCollapsed ? "justify-center" : "justify-between"}`}>
-            <div className={`flex items-center ${isSidebarCollapsed ? "justify-center" : "space-x-2"}`}>
-              <div className="rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 p-2">
-                <i className="ri-shopping-cart-2-line text-lg"></i>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <div style={{ background: 'linear-gradient(to right, #805ad5, #6b72ef)', padding: '0.5rem', borderRadius: '50%' }}>
+                <i className="ri-shopping-cart-2-line" style={{ fontSize: '1.25rem' }}></i>
               </div>
-              {!isSidebarCollapsed && (
-                <span className="text-xl font-bold tracking-tight text-white">Shopcove</span>
-              )}
+              {!isSidebarCollapsed && <span style={{ fontSize: '1.25rem', fontWeight: 'bold' }}>Shopcove</span>}
             </div>
             {!isSidebarCollapsed && (
               <Button
                 variant="ghost"
                 size="icon"
-                className="text-white hover:bg-blue-800/50 rounded-full"
+                style={{ color: 'white', borderRadius: '50%', background: 'rgba(255, 255, 255, 0.1)' }}
                 onClick={() => setIsSidebarCollapsed(true)}
               >
-                <i className="ri-arrow-left-s-line text-lg"></i>
+                <i className="ri-arrow-left-s-line" style={{ fontSize: '1.25rem' }}></i>
               </Button>
             )}
             {isSidebarCollapsed && (
               <Button
                 variant="ghost"
                 size="icon"
-                className="absolute -right-3 top-20 text-white bg-blue-700 hover:bg-blue-800 rounded-full shadow-md"
+                style={{ position: 'absolute', right: '-0.75rem', top: '3rem', color: 'white', background: '#4361ee', borderRadius: '50%', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)' }}
                 onClick={() => setIsSidebarCollapsed(false)}
               >
-                <i className="ri-arrow-right-s-line text-lg"></i>
+                <i className="ri-arrow-right-s-line" style={{ fontSize: '1.25rem' }}></i>
               </Button>
             )}
           </div>
 
           {!isSidebarCollapsed && (
-            <div className="p-4 border-b border-blue-800/50">
-              <div className="flex items-center space-x-3">
-                <Avatar className="h-10 w-10 border-2 border-blue-500">
+            <div style={{ padding: '1rem', borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <Avatar style={{ height: '2.5rem', width: '2.5rem', border: '2px solid #805ad5' }}>
                   <AvatarImage src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&h=200&fit=crop&auto=format" />
                   <AvatarFallback>JW</AvatarFallback>
                 </Avatar>
                 <div>
-                  <p className="font-medium text-white">Jessica Wilson</p>
-                  <p className="text-xs text-gray-300">Premium Member</p>
+                  <p style={{ fontWeight: 'bold' }}>Jessica Wilson</p>
+                  <p style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.6)' }}>Premium Member</p>
                 </div>
               </div>
             </div>
           )}
 
-          <ScrollArea className="flex-1 py-4">
-            <nav className={`space-y-1 ${isSidebarCollapsed ? "px-2" : "px-3"}`}>
+          <ScrollArea style={{ flex: 1, padding: '1rem' }}>
+            <nav style={{ space: '1rem 0' }}>
               {navItems.map((item, index) => (
                 <div
                   key={index}
                   onClick={() => setActiveComponent(item.title)}
-                  className={`flex items-center rounded-lg px-4 py-3 text-sm font-medium transition-colors cursor-pointer relative ${
-                    activeComponent === item.title
-                      ? "bg-blue-800/70 text-white"
-                      : "text-gray-300 hover:bg-blue-800/50 hover:text-white"
-                  } ${isSidebarCollapsed ? "justify-center" : "justify-between"}`}
-                  title={isSidebarCollapsed ? item.title : ""}
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    padding: '0.75rem 1rem',
+                    fontSize: '0.875rem',
+                    fontWeight: 'medium',
+                    cursor: 'pointer',
+                    background: activeComponent === item.title ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
+                    color: activeComponent === item.title ? 'white' : 'rgba(255, 255, 255, 0.6)',
+                    borderRadius: '0.5rem',
+                    transition: 'background 0.3s, color 0.3s',
+                  }}
                 >
-                  <div className={`flex items-center ${isSidebarCollapsed ? "flex-col" : ""}`}>
-                    <i className={`${item.icon} text-lg ${isSidebarCollapsed ? "mb-1" : "mr-3"}`}></i>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <i className={item.icon} style={{ fontSize: '1.25rem' }}></i>
                     {!isSidebarCollapsed && <span>{item.title}</span>}
                   </div>
                   {!isSidebarCollapsed && item.badge && (
-                    <Badge className="bg-blue-500 hover:bg-blue-600 text-xs">
+                    <Badge style={{ background: '#805ad5', color: 'white', fontSize: '0.75rem', padding: '0.25rem 0.5rem', borderRadius: '0.25rem' }}>
                       {item.badge}
                     </Badge>
                   )}
                   {isSidebarCollapsed && item.badge && (
-                    <Badge className="absolute -top-1 -right-1 text-xs h-5 min-w-5 flex items-center justify-center bg-blue-500 hover:bg-blue-600 px-1 py-0">
+                    <Badge style={{ position: 'absolute', top: '-0.25rem', right: '-0.25rem', background: '#805ad5', color: 'white', fontSize: '0.75rem', padding: '0.25rem', borderRadius: '50%' }}>
                       {item.badge}
                     </Badge>
                   )}
@@ -211,16 +250,16 @@ export default function RootLayout() {
           </ScrollArea>
 
           {!isSidebarCollapsed && (
-            <div className="p-4 border-t border-blue-800/50">
-              <div className="bg-blue-800/70 rounded-xl p-4">
-                <div className="flex items-center space-x-2 text-gray-300 mb-3">
-                  <i className="ri-customer-service-line text-lg"></i>
-                  <span className="font-medium">Need help?</span>
+            <div style={{ padding: '1rem', borderTop: '1px solid rgba(255, 255, 255, 0.1)' }}>
+              <div style={{ background: 'rgba(128, 90, 213, 0.7)', padding: '1rem', borderRadius: '0.5rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'rgba(255, 255, 255, 0.6)', marginBottom: '0.75rem' }}>
+                  <i className="ri-customer-service-line" style={{ fontSize: '1.25rem' }}></i>
+                  <span style={{ fontWeight: 'bold' }}>Need help?</span>
                 </div>
-                <p className="text-sm text-gray-300 mb-3">
+                <p style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.6)', marginBottom: '0.75rem' }}>
                   Our support team is ready to assist you with any questions.
                 </p>
-                <Button size="sm" className="w-full bg-white text-blue-900 hover:bg-blue-100">
+                <Button size="sm" style={{ width: '100%', background: 'white', color: '#4361ee', borderRadius: '0.5rem' }}>
                   Contact Support
                 </Button>
               </div>
@@ -230,51 +269,49 @@ export default function RootLayout() {
       </aside>
 
       {/* Main content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', width: '100%' }}>
         {/* Header */}
-        <header className="bg-white border-b border-slate-200 shadow-sm sticky top-0 z-10">
-          <div className="flex h-16 items-center px-4 sm:px-6">
-            <div className="flex items-center flex-1">
+        <header style={{ background: 'white', borderBottom: '1px solid rgba(0, 0, 0, 0.1)', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)', position: 'sticky', top: 0, zIndex: 10, padding: '0.5rem 1rem' }}>
+          <div style={{ display: 'flex', height: '4rem', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
               <Button
                 variant="ghost"
                 size="icon"
-                className="mr-2 lg:hidden text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                style={{ display: 'none', color: 'rgba(0, 0, 0, 0.6)', borderRadius: '50%', background: 'rgba(0, 0, 0, 0.05)' }}
                 onClick={() => setIsMobileSidebarOpen(true)}
               >
-                <i className="ri-menu-line text-lg"></i>
+                <i className="ri-menu-line" style={{ fontSize: '1.5rem' }}></i>
               </Button>
 
-              <div className="hidden md:flex relative rounded-md flex-1 max-w-md">
-                <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
-                  <i className="ri-search-line"></i>
-                </span>
+              <div style={{ display: 'flex', alignItems: 'center', borderRadius: '0.5rem', background: 'rgba(0, 0, 0, 0.05)', padding: '0.5rem', gap: '0.5rem' }}>
+                <i className="ri-search-line" style={{ color: 'rgba(0, 0, 0, 0.6)', fontSize: '1.25rem' }}></i>
                 <input
                   type="text"
                   placeholder="Search..."
-                  className="py-2 pl-10 pr-4 w-full bg-slate-50 border border-slate-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-700"
+                  style={{ border: 'none', outline: 'none', background: 'transparent', fontSize: '1rem', color: 'rgba(0, 0, 0, 0.8)' }}
                 />
               </div>
             </div>
 
-            <div className="flex items-center space-x-3">
-              <Button variant="ghost" size="icon" className="text-slate-600 hover:bg-slate-100 hover:text-slate-900 relative">
-                <i className="ri-notification-3-line text-lg"></i>
-                <span className="absolute -top-1 -right-1 h-5 min-w-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center px-1">3</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+              <Button variant="ghost" size="icon" style={{ color: 'rgba(0, 0, 0, 0.6)', borderRadius: '50%', background: 'rgba(0, 0, 0, 0.05)', position: 'relative' }}>
+                <i className="ri-notification-3-line" style={{ fontSize: '1.5rem' }}></i>
+                <span style={{ position: 'absolute', top: '-0.5rem', right: '-0.5rem', background: 'red', color: 'white', fontSize: '0.75rem', padding: '0.1rem 0.4rem', borderRadius: '50%' }}>3</span>
               </Button>
 
-              <Button variant="ghost" size="icon" className="text-slate-600 hover:bg-slate-100 hover:text-slate-900 relative">
-                <i className="ri-mail-line text-lg"></i>
-                <span className="absolute -top-1 -right-1 h-5 min-w-5 rounded-full bg-blue-500 text-white text-xs flex items-center justify-center px-1">2</span>
+              <Button variant="ghost" size="icon" style={{ color: 'rgba(0, 0, 0, 0.6)', borderRadius: '50%', background: 'rgba(0, 0, 0, 0.05)', position: 'relative' }}>
+                <i className="ri-mail-line" style={{ fontSize: '1.5rem' }}></i>
+                <span style={{ position: 'absolute', top: '-0.5rem', right: '-0.5rem', background: 'blue', color: 'white', fontSize: '0.75rem', padding: '0.1rem 0.4rem', borderRadius: '50%' }}>2</span>
               </Button>
 
-              <Button variant="ghost" size="icon" className="text-slate-600 hover:bg-slate-100 hover:text-slate-900">
-                <i className="ri-apps-line text-lg"></i>
+              <Button variant="ghost" size="icon" style={{ color: 'rgba(0, 0, 0, 0.6)', borderRadius: '50%', background: 'rgba(0, 0, 0, 0.05)' }}>
+                <i className="ri-apps-line" style={{ fontSize: '1.5rem' }}></i>
               </Button>
 
-              <div className="border-l border-slate-200 h-8 mx-2"></div>
+              <div style={{ borderLeft: '1px solid rgba(0, 0, 0, 0.1)', height: '2rem', margin: '0 1rem' }}></div>
 
-              <div className="flex items-center">
-                <Avatar className="h-8 w-8 border border-slate-200">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Avatar style={{ height: '2rem', width: '2rem', border: '1px solid rgba(0, 0, 0, 0.1)' }}>
                   <AvatarImage src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&h=200&fit=crop&auto=format" />
                   <AvatarFallback>JW</AvatarFallback>
                 </Avatar>
@@ -284,8 +321,8 @@ export default function RootLayout() {
         </header>
 
         {/* Page content */}
-        <main className="flex-1 overflow-auto p-4 sm:p-6 lg:p-8 bg-slate-50">
-          <div className="mx-auto max-w-7xl w-full">
+        <main style={{ flex: 1, overflow: 'auto', width: '100%' }}>
+          <div style={{ maxWidth: '100%', width: '100%', padding: '1rem 2rem' }}>
             {renderComponent()}
           </div>
         </main>

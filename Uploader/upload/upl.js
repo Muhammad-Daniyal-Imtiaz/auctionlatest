@@ -1,33 +1,74 @@
-"use client";
-
+'use client';
 import { useDropzone } from "react-dropzone";
-import { motion } from "framer-motion";
-import { Upload } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Upload, Check, Loader2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { useState } from "react";
+import { useState, useCallback, useEffect } from "react";
 
-const UploadStep = ({ 
-  files, 
-  setFiles, 
-  uploadProgress, 
-  isUploading, 
-  setUploadProgress, 
-  setIsUploading, 
-  setPredictions 
+const UploadStep = ({
+  files,
+  setFiles,
+  uploadProgress,
+  isUploading,
+  setUploadProgress,
+  setIsUploading,
+  setPredictions
 }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
-  const { getRootProps, getInputProps, isDragActive, isDragAccept, isDragReject } = useDropzone({
+  const onDrop = useCallback((acceptedFiles) => {
+    try {
+      setError(null);
+
+      const validFiles = acceptedFiles.filter(file => {
+        if (!file) {
+          setError("Invalid file received");
+          return false;
+        }
+        if (!file.type || !file.type.startsWith("image/")) {
+          setError(`File ${file.name} is not an image`);
+          return false;
+        }
+        if (file.size > MAX_FILE_SIZE) {
+          setError(`File ${file.name} is too large (max ${MAX_FILE_SIZE/1024/1024}MB)`);
+          return false;
+        }
+        return true;
+      });
+
+      if (validFiles.length === 0) return;
+
+      const newFiles = validFiles.map(file => ({
+        file,
+        preview: URL.createObjectURL(file),
+        cloudinaryUrl: null,
+        isUploading: true
+      }));
+
+      setFiles(prev => [...prev, ...newFiles]);
+      simulateUpload();
+      uploadFilesToCloudinary(newFiles);
+    } catch (err) {
+      console.error("Error processing files:", err);
+      setError("Failed to process uploaded files. Please try again.");
+    }
+  }, []);
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
     accept: {
       "image/*": [".jpeg", ".jpg", ".png", ".gif", ".webp"],
     },
-    onDrop: (acceptedFiles) => {
-      setFiles((prev) => [...prev, ...acceptedFiles]);
-      simulateUpload();
-      handleImageUpload(acceptedFiles[0]); // Classify the first uploaded image
-    },
+    onDrop,
+    maxFiles: 10,
+    multiple: true,
+    maxSize: MAX_FILE_SIZE,
+    onDropRejected: (rejectedFiles) => {
+      const firstError = rejectedFiles[0]?.errors[0];
+      setError(firstError?.message || "Some files were rejected");
+    }
   });
 
   const simulateUpload = () => {
@@ -46,160 +87,193 @@ const UploadStep = ({
     }, 200);
   };
 
-  const handleImageUpload = async (file) => {
-    if (!file) return;
+  const uploadFilesToCloudinary = async (newFiles) => {
+    try {
+      for (let i = 0; i < newFiles.length; i++) {
+        const file = newFiles[i].file;
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('upload_preset', 'swhoxjky');
 
-    // Validate image file
-    if (!file.type.startsWith("image/")) {
-      setError("Please upload a valid image file (JPEG, PNG, etc.).");
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-
-    // Convert image to Base64
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onloadend = async () => {
-      const base64Image = reader.result?.toString().split(",")[1]; // Remove Base64 metadata
-
-      try {
-        const response = await fetch(
-          "https://api-inference.huggingface.co/models/google/vit-base-patch16-224",
-          {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${process.env.NEXT_PUBLIC_HUGGINGFACE_API_TOKEN || ""}`,
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ inputs: base64Image, parameters: { top_k: 5 } }),
-          }
-        );
+        const response = await fetch('https://api.cloudinary.com/v1_1/diqlb6j9i/image/upload', {
+          method: 'POST',
+          body: formData,
+        });
 
         if (!response.ok) {
-          const errorData = await response.json();
-          console.error("API Error:", errorData);
-          setError("Failed to classify image. Please try again.");
-          return;
+          throw new Error('Failed to upload to Cloudinary');
         }
 
         const data = await response.json();
-        setPredictions(data.map((item) => ({ 
-          label: item.label, 
-          score: item.score 
-        })));
-      } catch (error) {
-        console.error("Error classifying image:", error);
-        setError("An error occurred. Please try again.");
-      } finally {
-        setLoading(false);
+
+        setFiles(prevFiles => {
+          const updatedFiles = [...prevFiles];
+          const fileIndex = updatedFiles.findIndex(f => f.file === file);
+          if (fileIndex !== -1) {
+            updatedFiles[fileIndex] = {
+              ...updatedFiles[fileIndex],
+              cloudinaryUrl: data.secure_url,
+              isUploading: false,
+            };
+          }
+          return updatedFiles;
+        });
       }
-    };
+    } catch (err) {
+      console.error("Error uploading to Cloudinary:", err);
+      setError("Failed to upload images. Please try again.");
+      setFiles(prevFiles =>
+        prevFiles.map(f =>
+          newFiles.some(nf => nf.file === f.file) ? { ...f, isUploading: false } : f
+        )
+      );
+    }
   };
+
+  const removeImage = (index) => {
+    if (index < 0 || index >= files.length) return;
+    const updatedFiles = [...files];
+    if (updatedFiles[index]?.preview) {
+      URL.revokeObjectURL(updatedFiles[index].preview);
+    }
+    updatedFiles.splice(index, 1);
+    setFiles(updatedFiles);
+  };
+
+  useEffect(() => {
+    return () => {
+      files.forEach(file => {
+        if (file?.preview) {
+          URL.revokeObjectURL(file.preview);
+        }
+      });
+    };
+  }, [files]);
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
       className="flex flex-col gap-6"
     >
-      <div className="text-center mb-6">
-        <h2 className="text-2xl font-bold mb-2">Upload Product Images</h2>
-        <p className="text-gray-500">Drag and drop your product images or click to browse</p>
-      </div>
-
+      {/* Dropzone area */}
       <div
         {...getRootProps()}
-        className={`border-2 border-dashed rounded-xl p-12 cursor-pointer text-center transition-all ${
-          isDragActive 
-            ? "border-primary bg-primary/10" 
-            : isDragReject 
-              ? "border-red-400 bg-red-100" 
-              : files.length === 0
-                ? "border-yellow-400 bg-yellow-50" 
-                : "border-gray-200 hover:bg-gray-50"
+        className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
+          isDragActive ? 'border-primary bg-primary/10' : 'border-gray-300 hover:border-gray-400'
         }`}
       >
         <input {...getInputProps()} />
-        <div className="flex flex-col items-center gap-4">
-          <motion.div
-            animate={{
-              scale: isDragActive ? 1.1 : 1,
-              y: isDragActive ? -10 : 0,
-            }}
-            transition={{ type: "spring", stiffness: 300, damping: 15 }}
-          >
-            <Upload className="h-12 w-12 text-gray-500" />
-          </motion.div>
-          <div>
-            <p className="font-medium">
-              {isDragActive ? "Drop the files here..." : "Drag 'n' drop some files here, or click to select files"}
+        <div className="flex flex-col items-center justify-center gap-3">
+          {isUploading ? (
+            <Loader2 className="h-10 w-10 text-primary animate-spin" />
+          ) : (
+            <Upload className="h-10 w-10 text-gray-400" />
+          )}
+          <div className="space-y-1">
+            <h3 className="font-medium text-lg">
+              {isDragActive ? 'Drop your files here' : 'Drag and drop files here'}
+            </h3>
+            <p className="text-sm text-gray-500">
+              or <span className="text-primary font-medium">click to browse</span>
             </p>
-            <p className="text-gray-500 text-sm mt-1">Supports JPG, PNG, GIF up to 10MB</p>
           </div>
+          <p className="text-xs text-gray-500">
+            Supported formats: JPEG, PNG, GIF, WEBP (Max {MAX_FILE_SIZE/1024/1024}MB each)
+          </p>
         </div>
       </div>
-      
-      {files.length === 0 && (
-        <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="bg-yellow-50 border border-yellow-200 text-yellow-800 rounded-md p-4 flex items-center gap-2"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-            <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-          </svg>
-          <span>Please upload at least one image to continue</span>
-        </motion.div>
+
+      {/* Upload progress */}
+      {isUploading && (
+        <div className="space-y-2">
+          <div className="flex justify-between text-sm">
+            <span>Uploading...</span>
+            <span>{uploadProgress}%</span>
+          </div>
+          <Progress value={uploadProgress} className="h-2" />
+        </div>
       )}
 
-      {files.length > 0 && (
-        <motion.div 
-          initial={{ opacity: 0, height: 0 }} 
-          animate={{ opacity: 1, height: "auto" }} 
-          className="flex flex-col gap-4"
+      {files.length > 0 ? (
+        <motion.div
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: "auto" }}
+          className="flex flex-col gap-6"
         >
           <div className="flex justify-between items-center">
             <h3 className="font-medium">Uploaded Files ({files.length})</h3>
-            <Button variant="ghost" size="sm" onClick={() => setFiles([])}>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                files.forEach(file => {
+                  if (file?.preview) URL.revokeObjectURL(file.preview);
+                });
+                setFiles([]);
+              }}
+            >
               Clear All
             </Button>
           </div>
 
-          {isUploading && (
-            <div className="flex flex-col gap-2">
-              <div className="flex justify-between text-sm">
-                <span>Uploading...</span>
-                <span>{uploadProgress}%</span>
+          <div className="grid grid-cols-1 gap-6">
+            {files.map((item, index) => (
+              <div key={index} className="border rounded-lg p-4">
+                <div className="flex items-center gap-4">
+                  <div className="relative">
+                    <img
+                      src={item.preview}
+                      alt={`Preview ${index}`}
+                      className="w-24 h-24 object-cover rounded-md"
+                    />
+                    {item.isUploading && (
+                      <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-md">
+                        <Loader2 className="h-6 w-6 text-white animate-spin" />
+                      </div>
+                    )}
+                    {item.cloudinaryUrl && !item.isUploading && (
+                      <div className="absolute top-1 right-1 bg-green-500 text-white p-1 rounded-full">
+                        <Check className="h-3 w-3" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-medium truncate">{item.file.name}</p>
+                    <p className="text-sm text-gray-500">
+                      {item.isUploading ? "Uploading..." :
+                       item.cloudinaryUrl ? "Uploaded to Cloudinary" : "Processing..."}
+                    </p>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => removeImage(index)}
+                    className="text-red-500 hover:text-red-700"
+                    disabled={item.isUploading}
+                  >
+                    <X className="h-4 w-4" /> Remove
+                  </Button>
+                </div>
               </div>
-              <Progress value={uploadProgress} className="h-2" />
-            </div>
-          )}
-
-          <div className="grid grid-cols-2 gap-4">
-            {files.map((file, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: index * 0.1 }}
-                className="relative aspect-square rounded-md overflow-hidden border"
-              >
-                <img 
-                  src={URL.createObjectURL(file)} 
-                  alt={`Preview ${index}`} 
-                  className="w-full h-full object-cover" 
-                />
-              </motion.div>
             ))}
           </div>
         </motion.div>
+      ) : (
+        <div className="text-center text-gray-500 py-8">
+          <p>No files uploaded yet</p>
+        </div>
       )}
 
-      {loading && <p className="text-primary">Processing image...</p>}
-      {error && <p className="text-red-500">{error}</p>}
+      {error && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="bg-red-50 border border-red-200 text-red-600 p-3 rounded-md text-sm"
+        >
+          {error}
+        </motion.div>
+      )}
     </motion.div>
   );
 };

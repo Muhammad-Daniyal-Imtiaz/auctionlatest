@@ -1,10 +1,10 @@
-'use client'
+"use client";
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Hexagon } from "lucide-react";
-import Header from "../Header/page";
-import ProductCard from "../ProductCard/page";
-import CategoryFilter from "../CategoryFilter/page";
+import Header from "../header/page";
+import ProductCard from "../productcard/page";
+import CategoryFilter from "../categoryfilter/page";
 import LiveBiddingTerminal from "../LiveBiddingTerminal/page";
 import Footer from "../Footer/page";
 
@@ -16,7 +16,7 @@ const ThemeSelector = ({ theme, changeTheme }) => {
   ];
 
   return (
-    <div className="flex space-x-4 mb-4 flex-wrap">
+    <div className="flex space-x-4 mb-4 flex-wrap justify-center">
       {themes.map((t) => (
         <button
           key={t}
@@ -229,14 +229,14 @@ export default function CyberpunkMarketplace() {
         </div>
         <div className="absolute inset-0 bg-mesh"></div>
       </div>
-      <div className="relative z-10">
+      <div className="relative z-10 flex flex-col min-h-screen">
         <Header
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
           mobileMenuOpen={mobileMenuOpen}
           setMobileMenuOpen={setMobileMenuOpen}
         />
-        <main className="container mx-auto px-4 py-8">
+        <main className="flex-grow container mx-auto px-4 py-8">
           <section className="mb-12">
             <ThemeSelector theme={theme} changeTheme={changeTheme} />
             <motion.div

@@ -1,57 +1,56 @@
 'use client'
 import { motion } from "framer-motion";
-import { Check } from "lucide-react";
 
 const Stepper = ({ steps, currentStep }) => {
   return (
-    <div className="flex justify-between items-center">
-      {steps.map((step, index) => (
-        <div key={index} className="flex flex-col items-center relative">
+    <div className="w-full">
+      <div className="flex justify-between relative">
+        {/* Progress bar */}
+        <div className="absolute top-1/2 left-0 right-0 h-1 bg-gray-200 -translate-y-1/2">
           <motion.div
-            className={`w-10 h-10 rounded-full flex items-center justify-center mb-2 transition-transform ${
-              currentStep === index 
-                ? "bg-primary" 
-                : currentStep > index 
-                  ? "bg-success" 
-                  : "bg-gray-200"
-            }`}
+            className="h-full bg-primary"
+            initial={{ width: 0 }}
             animate={{
-              scale: currentStep === index ? [1, 1.1, 1] : 1,
+              width: `${(currentStep / (steps.length - 1)) * 100}%`,
             }}
-            transition={{
-              duration: 0.5,
-              repeat: currentStep === index ? Infinity : 0,
-              repeatType: "reverse",
-              repeatDelay: 2,
-            }}
-          >
-            {currentStep > index ? (
-              <Check className="text-white" size={18} />
-            ) : (
-              <step.icon className={currentStep === index ? "text-white" : ""} size={18} />
-            )}
-          </motion.div>
-          <span
-            className={`text-sm ${
-              currentStep === index 
-                ? "font-medium text-primary" 
-                : "text-gray-500"
-            }`}
-          >
-            {step.title}
-          </span>
-          {index < steps.length - 1 && (
-            <div className="absolute top-5 left-1/2 w-full h-0.5 bg-gray-200">
-              <motion.div
-                className="bg-primary h-full"
-                initial={{ width: "0%" }}
-                animate={{ width: currentStep > index ? "100%" : "0%" }}
-                transition={{ duration: 0.5 }}
-              />
-            </div>
-          )}
+            transition={{ duration: 0.5 }}
+          />
         </div>
-      ))}
+
+        {steps.map((step, index) => (
+          <div key={index} className="relative z-10 flex flex-col items-center">
+            <div
+              className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                index <= currentStep ? "bg-primary text-white" : "bg-gray-200 text-gray-600"
+              }`}
+            >
+              {index < currentStep ? (
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              ) : (
+                <step.icon className="h-4 w-4" />
+              )}
+            </div>
+            <span
+              className={`text-sm mt-2 ${
+                index === currentStep ? "font-medium text-primary" : "text-gray-500"
+              }`}
+            >
+              {step.title}
+            </span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 };

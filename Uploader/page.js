@@ -1,8 +1,10 @@
 'use client';
 import React, { useState, useEffect } from "react";
+import { useUser } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
 import { AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { ChevronRight, ChevronLeft, Upload, ImageIcon, Tag, FileText, Moon, Sun, Sparkles, Leaf, Zap, Minimize2 } from "lucide-react";
+import { ChevronRight, ChevronLeft, Upload, ImageIcon, Tag, FileText, Moon, Sun, Sparkles, Leaf, Zap, Minimize2, Loader2 } from "lucide-react";
 import Stepper from "./upload/stepper";
 import UploadStep from "./upload/upl";
 import PreviewStep from "./upload/preview";
@@ -11,6 +13,7 @@ import DetailsStep from "./upload/details";
 import ThemeSwitcherComponent from "./upload/themes";
 import { useCopilotAction, useCopilotReadable } from '@copilotkit/react-core';
 import { CopilotPopup } from "@copilotkit/react-ui";
+import { toast } from "sonner";
 
 const themes = {
   dark: {
@@ -78,6 +81,8 @@ const categories = [
 ];
 
 export default function ProductUploader() {
+  const { user } = useUser();
+  const router = useRouter();
   const [currentStep, setCurrentStep] = useState(0);
   const [files, setFiles] = useState([]);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -89,9 +94,12 @@ export default function ProductUploader() {
     description: "",
     price: "",
     category: "",
+    sale_type: "fixed",
   });
   const [theme, setTheme] = useState("light");
   const [isUploading, setIsUploading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState(null);
   const [predictions, setPredictions] = useState([]);
 
   useEffect(() => {
@@ -110,27 +118,160 @@ export default function ProductUploader() {
           return [...prev, mockAITags[prev.length]];
         });
       }, 300);
+      return () => clearInterval(tagInterval);
     }
   }, [currentStep]);
 
+  const handleSaleTypeChange = (type) => {
+    if (type === "auction") {
+      setProductDetails(prev => ({
+        ...prev,
+        sale_type: type,
+        startDate: new Date(),
+        endDate: new Date(new Date().setDate(new Date().getDate() + 7)),
+        startTime: "12:00",
+        endTime: "12:00",
+        minBidIncrement: "1.00",
+        auctionStatus: "pending"
+      }));
+    } else {
+      const { startDate, endDate, startTime, endTime, minBidIncrement, auctionStatus, ...rest } = productDetails;
+      setProductDetails({
+        ...rest,
+        sale_type: type
+      });
+    }
+  };
+
+  const handleSubmit = async () => {
+    if (!user) {
+      toast.error("Please sign in to continue");
+      return;
+    }
+
+    if (!productDetails.name || !productDetails.description || !productDetails.price || !productDetails.category) {
+      toast.error("Please fill in all required fields");
+      return;
+    }
+
+    if (selectedImages.length === 0) {
+      toast.error("Please select at least one image");
+      return;
+    }
+
+    if (productDetails.sale_type === "auction") {
+      if (!productDetails.startDate || !productDetails.endDate) {
+        toast.error("Please set auction start and end dates");
+        return;
+      }
+
+      const now = new Date();
+      const startDateTime = new Date(`${productDetails.startDate.toISOString().split('T')[0]}T${productDetails.startTime}`);
+      const endDateTime = new Date(`${productDetails.endDate.toISOString().split('T')[0]}T${productDetails.endTime}`);
+
+      if (startDateTime >= endDateTime) {
+        toast.error("Auction end time must be after start time");
+        return;
+      }
+
+      if (startDateTime < now) {
+        toast.error("Auction start time must be in the future");
+        return;
+      }
+
+      if (parseFloat(productDetails.minBidIncrement || 0) <= 0) {
+        toast.error("Minimum bid increment must be greater than 0");
+        return;
+      }
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const productData = {
+        name: productDetails.name,
+        description: productDetails.description,
+        price: parseFloat(productDetails.price),
+        category: productDetails.category,
+        tags: selectedTags,
+        sale_type: productDetails.sale_type,
+        clerk_id: user.id,
+        user_email: user.primaryEmailAddress?.emailAddress,
+        user_name: user.fullName,
+        user_image: user.imageUrl,
+        images: files
+          .filter((_, index) => selectedImages.includes(index))
+          .map(file => file.cloudinaryUrl),
+      };
+
+      if (productDetails.sale_type === "auction") {
+        Object.assign(productData, {
+          start_date: productDetails.startDate.toISOString(),
+          end_date: productDetails.endDate.toISOString(),
+          start_time: productDetails.startTime,
+          end_time: productDetails.endTime,
+          min_bid_increment: parseFloat(productDetails.minBidIncrement),
+          auction_status: "pending",
+        });
+      }
+
+      const response = await fetch('/api/products', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(productData),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to create product');
+      }
+
+      const result = await response.json();
+
+      if (!result.success) {
+        throw new Error(result.error || 'Product creation failed');
+      }
+
+      toast.success(
+        productDetails.sale_type === "auction"
+          ? "Auction created successfully!"
+          : "Product listed successfully!"
+      );
+      router.push(`/products/${result.product.id}`);
+    } catch (error) {
+      console.error('Product creation error:', error);
+      toast.error(error.message || "Failed to create product");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const handleNext = () => {
     if (currentStep < 3) {
-      setCurrentStep((prev) => prev + 1);
+      setCurrentStep(prev => prev + 1);
+    } else {
+      handleSubmit();
     }
   };
 
   const handlePrevious = () => {
     if (currentStep > 0) {
-      setCurrentStep((prev) => prev - 1);
+      setCurrentStep(prev => prev - 1);
     }
   };
 
   const toggleImageSelection = (index) => {
-    setSelectedImages((prev) => (prev.includes(index) ? prev.filter((i) => i !== index) : [...prev, index]));
+    setSelectedImages((prev) =>
+      prev.includes(index) ? prev.filter((i) => i !== index) : [...prev, index]
+    );
   };
 
   const toggleTagSelection = (tagName) => {
-    setSelectedTags((prev) => (prev.includes(tagName) ? prev.filter((tag) => tag !== tagName) : [...prev, tagName]));
+    setSelectedTags((prev) =>
+      prev.includes(tagName) ? prev.filter((tag) => tag !== tagName) : [...prev, tagName]
+    );
   };
 
   const handleDetailsChange = (e) => {
@@ -145,6 +286,13 @@ export default function ProductUploader() {
     setProductDetails((prev) => ({
       ...prev,
       category: value,
+    }));
+  };
+
+  const handleDateChange = (name, date) => {
+    setProductDetails(prev => ({
+      ...prev,
+      [name]: date
     }));
   };
 
@@ -168,10 +316,9 @@ export default function ProductUploader() {
     />,
     <PreviewStep
       key="preview"
-      previewUrls={files.map((file) => URL.createObjectURL(file))}
+      files={files}
       selectedImages={selectedImages}
       toggleImageSelection={toggleImageSelection}
-      setSelectedImages={setSelectedImages}
     />,
     <TagsStep
       key="tags"
@@ -179,364 +326,111 @@ export default function ProductUploader() {
       selectedTags={selectedTags}
       toggleTagSelection={toggleTagSelection}
       setSelectedTags={setSelectedTags}
+      categories={categories}
     />,
     <DetailsStep
       key="details"
       productDetails={productDetails}
       handleDetailsChange={handleDetailsChange}
       handleCategoryChange={handleCategoryChange}
+      handleSaleTypeChange={handleSaleTypeChange}
+      handleDateChange={handleDateChange}
       selectedTags={selectedTags}
       toggleTagSelection={toggleTagSelection}
       categories={categories}
       predictions={predictions}
+      setProductDetails={setProductDetails}
     />,
   ];
 
-  // Make available to Copilot all the current state data
   useCopilotReadable({
-    description: "The current product details.",
-    value: productDetails,
+    description: "Current product details",
+    value: productDetails
   });
 
   useCopilotReadable({
-    description: "The current step in the product upload process.",
-    value: currentStep,
+    description: "Current step index",
+    value: currentStep
   });
 
   useCopilotReadable({
-    description: "The current selected tags for the product.",
-    value: selectedTags,
+    description: "Uploaded files",
+    value: files
   });
 
   useCopilotReadable({
-    description: "The tags suggested by AI image analysis.",
-    value: aiTags,
+    description: "Selected images indices",
+    value: selectedImages
   });
 
   useCopilotReadable({
-    description: "The selected images indices.",
-    value: selectedImages,
+    description: "AI generated tags",
+    value: aiTags
   });
 
   useCopilotReadable({
-    description: "The uploaded files for the product.",
-    value: files.map(file => file.name),
+    description: "Selected tags",
+    value: selectedTags
   });
 
-  useCopilotReadable({
-    description: "Number of uploaded image files.",
-    value: files.length,
-  });
-  
-  useCopilotReadable({
-    description: "Whether any images have been uploaded yet.",
-    value: files.length > 0,
-  });
-
-  useCopilotReadable({
-    description: "Image predictions from AI analysis.",
-    value: predictions,
-  });
-
-  // Copilot action to update product details
   useCopilotAction({
     name: "updateProductDetails",
-    description: "Update the product details and move to the next step if appropriate",
+    description: "Update product details and optionally move to next step",
     parameters: [
       {
         name: "details",
         type: "object",
-        description: "The new product details.",
+        description: "Product details to update",
         attributes: [
-          {
-            name: "name",
-            type: "string",
-            description: "The name of the product.",
-          },
-          {
-            name: "description",
-            type: "string",
-            description: "The description of the product.",
-          },
-          {
-            name: "price",
-            type: "string",
-            description: "The price of the product.",
-          },
-          {
-            name: "category",
-            type: "string",
-            description: "The category of the product.",
-          },
-        ],
+          { name: "name", type: "string" },
+          { name: "description", type: "string" },
+          { name: "price", type: "string" },
+          { name: "category", type: "string" },
+          { name: "sale_type", type: "string", enum: ["fixed", "auction"] }
+        ]
       },
       {
         name: "moveToNextStep",
         type: "boolean",
-        description: "Whether to automatically move to the next step after updating details.",
-        required: false,
-      },
+        description: "Whether to move to next step after update",
+        required: false
+      }
     ],
-    handler: ({ details, moveToNextStep = true }) => {
-      setProductDetails(prev => ({
-        ...prev,
-        ...details
-      }));
-      
+    handler: ({ details, moveToNextStep = false }) => {
+      if (details.sale_type === "auction" && productDetails.sale_type !== "auction") {
+        handleSaleTypeChange("auction");
+      } else if (details.sale_type === "fixed" && productDetails.sale_type !== "fixed") {
+        handleSaleTypeChange("fixed");
+      }
+
+      setProductDetails(prev => ({ ...prev, ...details }));
       if (moveToNextStep && currentStep < 3) {
-        handleNext();
+        setCurrentStep(prev => prev + 1);
       }
-      
-      return { 
-        success: true, 
-        message: "Product details updated successfully",
-        details: details
-      };
-    },
-    render: "Updating product details...",
-  });
-
-  // Copilot action to add tags
-  useCopilotAction({
-    name: "addTags",
-    description: "Add tags to the product and optionally move to the next step",
-    parameters: [
-      {
-        name: "tags",
-        type: "string[]",
-        description: "The tags to add to the product.",
-      },
-      {
-        name: "moveToNextStep",
-        type: "boolean",
-        description: "Whether to automatically move to the next step after adding tags.",
-        required: false,
-      },
-    ],
-    handler: ({ tags, moveToNextStep = true }) => {
-      const newTags = tags.filter(tag => !selectedTags.includes(tag));
-      setSelectedTags(prevTags => [...prevTags, ...newTags]);
-      
-      if (moveToNextStep && currentStep < 3) {
-        handleNext();
-      }
-      
-      return { 
-        success: true, 
-        message: `Added ${newTags.length} new tags`,
-        tagsAdded: newTags
-      };
-    },
-    render: "Adding tags...",
-  });
-
-  // Copilot action to select images
-  useCopilotAction({
-    name: "selectImages",
-    description: "Select specific images by indices and optionally move to the next step",
-    parameters: [
-      {
-        name: "indices",
-        type: "number[]",
-        description: "The indices of the images to select. Use integers starting from 0.",
-      },
-      {
-        name: "moveToNextStep",
-        type: "boolean",
-        description: "Whether to automatically move to the next step after selecting images.",
-        required: false,
-      },
-    ],
-    handler: ({ indices, moveToNextStep = true }) => {
-      const validIndices = indices.filter(index => index >= 0 && index < files.length);
-      setSelectedImages(validIndices);
-      
-      if (moveToNextStep && currentStep < 3) {
-        handleNext();
-      }
-      
-      return { 
-        success: true, 
-        message: `Selected ${validIndices.length} images`,
-        selectedIndices: validIndices
-      };
-    },
-    render: "Selecting images...",
-  });
-
-  // Copilot action to move to a specific step
-  useCopilotAction({
-    name: "goToStep",
-    description: "Navigate to a specific step in the product upload flow",
-    parameters: [
-      {
-        name: "step",
-        type: "number",
-        description: "The step number to navigate to (0-3): 0=Upload, 1=Preview, 2=Tags, 3=Details",
-      },
-    ],
-    handler: ({ step }) => {
-      // Validate image upload requirement when trying to navigate past step 0
-      if (step > 0 && files.length === 0) {
-        return {
-          success: false,
-          message: "You need to upload at least one image before proceeding to the next steps."
-        };
-      }
-      
-      // Validate image selection requirement when trying to navigate past step 1
-      if (step > 1 && selectedImages.length === 0) {
-        return {
-          success: false,
-          message: "You need to select at least one image before proceeding to the next steps."
-        };
-      }
-      
-      if (step >= 0 && step <= 3) {
-        setCurrentStep(step);
-        return { 
-          success: true, 
-          message: `Navigated to step ${steps[step].title}`
-        };
-      } else {
-        return { 
-          success: false, 
-          message: "Invalid step number. Please provide a number between 0 and 3."
-        };
-      }
-    },
-    render: "Navigating to step...",
-  });
-
-  // Copilot action to prompt users to upload images when none are present
-  useCopilotAction({
-    name: "promptForImageUpload",
-    description: "Remind the user to upload at least one image for the product",
-    parameters: [],
-    handler: () => {
-      if (files.length === 0) {
-        // Make sure we're on the upload step
-        if (currentStep !== 0) {
-          setCurrentStep(0);
-        }
-        
-        return {
-          success: true,
-          message: "Please upload at least one image for your product. You need to upload images before proceeding to other steps."
-        };
-      } else {
-        return {
-          success: true,
-          message: `You have already uploaded ${files.length} image(s). You can proceed to the next step.`,
-          files: files.map(file => file.name)
-        };
-      }
-    },
-    render: "Checking image upload status...",
-  });
-  
-  // Copilot action to complete the entire process
-  useCopilotAction({
-    name: "completeProductUpload",
-    description: "Automatically complete the product upload process with the provided details",
-    parameters: [
-      {
-        name: "productInfo",
-        type: "object",
-        description: "Complete product information",
-        attributes: [
-          {
-            name: "name",
-            type: "string",
-            description: "The name of the product.",
-            required: true,
-          },
-          {
-            name: "description",
-            type: "string",
-            description: "The description of the product.",
-            required: true,
-          },
-          {
-            name: "price",
-            type: "string",
-            description: "The price of the product.",
-            required: true,
-          },
-          {
-            name: "category",
-            type: "string",
-            description: "The category of the product.",
-            required: true,
-          },
-          {
-            name: "tags",
-            type: "string[]",
-            description: "Tags for the product.",
-            required: false,
-          },
-        ],
-      },
-    ],
-    handler: async ({ productInfo }) => {
-      // First check if at least one image is uploaded
-      if (files.length === 0) {
-        return {
-          success: false,
-          message: "You need to upload at least one image before completing the product upload process."
-        };
-      }
-      
-      // Update all product details
-      setProductDetails({
-        name: productInfo.name,
-        description: productInfo.description,
-        price: productInfo.price,
-        category: productInfo.category,
-      });
-      
-      // Add tags if provided
-      if (productInfo.tags && productInfo.tags.length > 0) {
-        const newTags = productInfo.tags.filter(tag => !selectedTags.includes(tag));
-        setSelectedTags(prev => [...prev, ...newTags]);
-      }
-      
-      // If we have files and no selected images, select all images
-      if (files.length > 0 && selectedImages.length === 0) {
-        setSelectedImages(Array.from({ length: files.length }, (_, i) => i));
-      }
-      
-      // Navigate to the final step
-      setCurrentStep(3);
-      
-      return { 
-        success: true, 
-        message: "Product information completed successfully",
-        productDetails: {
-          ...productInfo,
-          selectedImages: selectedImages,
-          totalFiles: files.length
-        }
-      };
-    },
-    render: "Completing product upload...",
+    }
   });
 
   return (
-    <div className="min-h-screen transition-colors duration-300 bg-light text-dark">
+    <div className="min-h-screen transition-colors duration-300">
       <div className="max-w-4xl mx-auto p-8 flex flex-col gap-8">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold">Product Uploader</h1>
-          <ThemeSwitcherComponent theme={theme} setTheme={setTheme} themes={themes} />
+          <h1 className="text-3xl font-bold">List Your Product</h1>
+          <ThemeSwitcherComponent
+            theme={theme}
+            setTheme={setTheme}
+            themes={themes}
+          />
         </div>
 
         <div className="mb-8">
-          <Stepper steps={steps} currentStep={currentStep} />
+          <Stepper steps={steps} currentStep={currentStep} theme={theme} />
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm p-6 mb-6 flex-1 flex flex-col">
+        <div className="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6 mb-6 flex-1 flex flex-col">
           <div className="flex-1">
-            <AnimatePresence mode="wait">{stepContents[currentStep]}</AnimatePresence>
+            <AnimatePresence mode="wait">
+              {stepContents[currentStep]}
+            </AnimatePresence>
           </div>
         </div>
 
@@ -545,7 +439,7 @@ export default function ProductUploader() {
             variant="outline"
             onClick={handlePrevious}
             disabled={currentStep === 0}
-            className="flex items-center gap-2 text-primary border-primary"
+            className="flex items-center gap-2"
           >
             <ChevronLeft size={16} />
             Previous
@@ -556,59 +450,63 @@ export default function ProductUploader() {
             disabled={
               (currentStep === 0 && files.length === 0) ||
               (currentStep === 1 && selectedImages.length === 0) ||
-              currentStep === 3
+              isSubmitting
             }
-            className="flex items-center gap-2 text-primary border-primary"
+            className="flex items-center gap-2"
           >
-            {currentStep < 3 ? (
+            {isSubmitting ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : currentStep < 3 ? (
               <>
                 Next
                 <ChevronRight size={16} />
               </>
             ) : (
-              "Submit"
+              productDetails.sale_type === "auction" ? "Start Auction" : "List Product"
             )}
           </Button>
         </div>
 
-        {/* Display predictions */}
-        <div className="mt-4 p-4 bg-white rounded-xl shadow-sm">
-          <h3 className="font-bold mb-2">Predictions:</h3>
-          <ul className="space-y-2">
-            {predictions.map((pred, index) => (
-              <li key={index} className="flex justify-between items-center p-2 bg-gray-50 rounded">
-                <strong>{pred.label}</strong>
-                <span className="text-sm text-gray-500">({(pred.score * 100).toFixed(2)}%)</span>
-              </li>
-            ))}
-          </ul>
-        </div>
+        {submitError && (
+          <div className="text-red-500 text-sm mt-2 text-center">{submitError}</div>
+        )}
+
+        {predictions.length > 0 && (
+          <div className="mt-4 p-4 bg-white dark:bg-zinc-800 rounded-xl shadow-sm">
+            <h3 className="font-bold mb-2">AI Predictions:</h3>
+            <ul className="space-y-2">
+              {predictions.map((pred, index) => (
+                <li key={index} className="flex justify-between items-center p-2 bg-gray-50 dark:bg-zinc-700 rounded">
+                  <strong>{pred.label}</strong>
+                  <span>{(pred.score * 100).toFixed(2)}%</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </div>
 
-      {/* CopilotPopup */}
       <CopilotPopup
-        instructions={
-          "You are a helpful assistant for the product upload process. " +
-          "You can help the user upload product images, select images, add tags, " +
-          "and fill in product details. " +
-          
-          "IMPORTANT IMAGE REQUIREMENT: " +
-          "At least one image MUST be uploaded to proceed with the product upload process. " +
-          "If no images have been uploaded (check 'files.length' or 'Whether any images have been uploaded yet'), " +
-          "use the 'promptForImageUpload' action to notify the user and direct them to upload images first. " +
-          "Always check if images are uploaded before helping with other steps. " +
-          
-          "If a user asks about adding product details, tags, or other information when no images are uploaded, " +
-          "first inform them about the image requirement and use 'promptForImageUpload' action. " +
-          
-          "If a user provides product details like name, description, price, category, " +
-          "or tags, you should automatically update those fields in the form using the appropriate actions " +
-          "and move to the appropriate step in the process, but only if images have been uploaded."
-        }
+        instructions={`
+          You are a product upload assistant. Help users through the 4-step process:
+          1. Upload - Must upload at least one image
+          2. Preview - Select images
+          3. Tags - Add product tags
+          4. Details - Enter product information
+
+          Rules:
+          - Always verify images are uploaded before proceeding
+          - For auctions, collect all required fields
+          - Provide clear guidance at each step
+          - Help with writing good product descriptions
+          - Suggest appropriate tags based on the product
+        `}
         labels={{
-          title: "Product Upload Assistant",
-          initial: "Need help with your product upload? Remember to upload at least one image to proceed!",
+          title: "Listing Assistant",
+          initial: "How can I help with your product listing today?"
         }}
+        defaultOpen={false}
+        clickOutsideToClose={true}
       />
     </div>
   );

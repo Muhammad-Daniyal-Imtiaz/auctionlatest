@@ -1,4 +1,4 @@
-'use client'
+'use client';
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -14,39 +14,39 @@ import { Switch } from "@/components/ui/switch";
 export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState("overview");
   const [isAdmin, setIsAdmin] = useState(true);
-  
+
   const statsData = [
-    { 
-      title: "Total Revenue", 
-      value: "$45,231.89", 
-      change: "+20.1%", 
+    {
+      title: "Total Revenue",
+      value: "$45,231.89",
+      change: "+20.1%",
       isPositive: true,
       icon: "ri-money-dollar-circle-line",
       bgColor: "bg-gradient-to-br from-purple-100 to-pink-100",
       iconColor: "text-purple-700"
     },
-    { 
-      title: "Total Orders", 
-      value: "2,350", 
-      change: "+180", 
+    {
+      title: "Total Orders",
+      value: "2,350",
+      change: "+180",
       isPositive: true,
       icon: "ri-shopping-bag-line",
       bgColor: "bg-gradient-to-br from-blue-100 to-teal-100",
       iconColor: "text-blue-700"
     },
-    { 
-      title: "Active Customers", 
-      value: "1,235", 
-      change: "-0.4%", 
+    {
+      title: "Active Customers",
+      value: "1,235",
+      change: "-0.4%",
       isPositive: false,
       icon: "ri-user-heart-line",
       bgColor: "bg-gradient-to-br from-amber-100 to-orange-100",
       iconColor: "text-amber-700"
     },
-    { 
-      title: "Conversion Rate", 
-      value: "3.75%", 
-      change: "+12.3%", 
+    {
+      title: "Conversion Rate",
+      value: "3.75%",
+      change: "+12.3%",
       isPositive: true,
       icon: "ri-percent-line",
       bgColor: "bg-gradient-to-br from-green-100 to-emerald-100",
@@ -235,7 +235,7 @@ export default function DashboardPage() {
   };
 
   const renderUserDashboard = () => (
-    <div className="space-y-6">
+    <div className="space-y-6 p-4">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 bg-clip-text text-transparent">
@@ -268,7 +268,7 @@ export default function DashboardPage() {
             </div>
           </CardContent>
         </Card>
-        
+
         <Card className="bg-gradient-to-br from-blue-50 to-cyan-50 border-blue-100">
           <CardContent className="p-6 flex items-center justify-between">
             <div>
@@ -281,7 +281,7 @@ export default function DashboardPage() {
             </div>
           </CardContent>
         </Card>
-        
+
         <Card className="bg-gradient-to-br from-amber-50 to-orange-50 border-amber-100">
           <CardContent className="p-6 flex items-center justify-between">
             <div>
@@ -390,7 +390,7 @@ export default function DashboardPage() {
   );
 
   const renderAdminDashboard = () => (
-    <div className="space-y-6">
+    <div className="space-y-6 p-4">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent">
@@ -521,7 +521,7 @@ export default function DashboardPage() {
               </Button>
             </CardFooter>
           </Card>
-          
+
           <div className="grid gap-4 md:grid-cols-3">
             <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-100 md:col-span-1">
               <CardHeader>
@@ -536,7 +536,7 @@ export default function DashboardPage() {
                     </div>
                     <Progress value={75} className="h-2 bg-blue-100" />
                   </div>
-                  
+
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-medium">Low Stock</span>
@@ -544,7 +544,7 @@ export default function DashboardPage() {
                     </div>
                     <Progress value={18} className="h-2 bg-amber-100" />
                   </div>
-                  
+
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-medium">Out of Stock</span>
@@ -553,7 +553,7 @@ export default function DashboardPage() {
                     <Progress value={7} className="h-2 bg-red-100" />
                   </div>
                 </div>
-                
+
                 <div className="mt-6 space-y-2">
                   <Button variant="outline" size="sm" className="w-full text-blue-700 border-blue-200">
                     <i className="ri-alarm-warning-line mr-1"></i> Low Stock Alert (23)
@@ -564,7 +564,7 @@ export default function DashboardPage() {
                 </div>
               </CardContent>
             </Card>
-            
+
             <Card className="bg-gradient-to-br from-purple-50 to-pink-50 border-purple-100 md:col-span-2">
               <CardHeader>
                 <CardTitle className="text-purple-900">Product Categories</CardTitle>
@@ -583,7 +583,7 @@ export default function DashboardPage() {
                     </div>
                     <Progress value={85} className="h-1.5 mt-3 bg-blue-100" />
                   </div>
-                  
+
                   <div className="bg-white rounded-lg p-4 shadow-sm">
                     <div className="flex items-center gap-3">
                       <div className="rounded-full p-2 bg-green-100 text-green-600">
@@ -596,7 +596,7 @@ export default function DashboardPage() {
                     </div>
                     <Progress value={75} className="h-1.5 mt-3 bg-green-100" />
                   </div>
-                  
+
                   <div className="bg-white rounded-lg p-4 shadow-sm">
                     <div className="flex items-center gap-3">
                       <div className="rounded-full p-2 bg-amber-100 text-amber-600">
@@ -609,7 +609,7 @@ export default function DashboardPage() {
                     </div>
                     <Progress value={62} className="h-1.5 mt-3 bg-amber-100" />
                   </div>
-                  
+
                   <div className="bg-white rounded-lg p-4 shadow-sm">
                     <div className="flex items-center gap-3">
                       <div className="rounded-full p-2 bg-purple-100 text-purple-600">
@@ -802,7 +802,7 @@ export default function DashboardPage() {
                 </div>
               </CardContent>
             </Card>
-            
+
             <Card className="bg-gradient-to-br from-pink-50 to-rose-50 border-pink-100">
               <CardHeader>
                 <CardTitle className="text-pink-900">Revenue Breakdown</CardTitle>
@@ -814,7 +814,7 @@ export default function DashboardPage() {
                     <p className="text-pink-950">Revenue by product category</p>
                   </div>
                 </div>
-                
+
                 <div className="mt-4 space-y-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -823,7 +823,7 @@ export default function DashboardPage() {
                     </div>
                     <span className="text-sm font-medium">42%</span>
                   </div>
-                  
+
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <div className="w-3 h-3 rounded-full bg-purple-500"></div>
@@ -831,7 +831,7 @@ export default function DashboardPage() {
                     </div>
                     <span className="text-sm font-medium">28%</span>
                   </div>
-                  
+
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <div className="w-3 h-3 rounded-full bg-green-500"></div>
@@ -839,7 +839,7 @@ export default function DashboardPage() {
                     </div>
                     <span className="text-sm font-medium">18%</span>
                   </div>
-                  
+
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <div className="w-3 h-3 rounded-full bg-amber-500"></div>
@@ -850,7 +850,7 @@ export default function DashboardPage() {
                 </div>
               </CardContent>
             </Card>
-            
+
             <Card className="bg-gradient-to-br from-violet-50 to-purple-50 border-violet-100">
               <CardHeader>
                 <CardTitle className="text-violet-900">Sales Channels</CardTitle>
@@ -862,7 +862,7 @@ export default function DashboardPage() {
                     <p className="text-violet-950">Sales by channel</p>
                   </div>
                 </div>
-                
+
                 <div className="mt-4 space-y-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -871,7 +871,7 @@ export default function DashboardPage() {
                     </div>
                     <span className="text-sm font-medium">65%</span>
                   </div>
-                  
+
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <div className="w-3 h-3 rounded-full bg-cyan-500"></div>
@@ -879,7 +879,7 @@ export default function DashboardPage() {
                     </div>
                     <span className="text-sm font-medium">25%</span>
                   </div>
-                  
+
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <div className="w-3 h-3 rounded-full bg-sky-500"></div>
@@ -897,21 +897,23 @@ export default function DashboardPage() {
   );
 
   return (
-    <div>
+    <div className="flex flex-col h-screen">
       <div className="flex justify-end mb-6 bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-lg shadow-sm border border-blue-100">
         <div className="flex items-center gap-3">
           <span className="text-sm font-medium">
             {isAdmin ? "Admin View" : "Customer View"}
           </span>
-          <Switch 
+          <Switch
             checked={isAdmin}
             onCheckedChange={setIsAdmin}
             className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-blue-600 data-[state=checked]:to-indigo-600"
           />
         </div>
       </div>
-      
-      {isAdmin ? renderAdminDashboard() : renderUserDashboard()}
+
+      <div className="flex-1 overflow-auto p-4">
+        {isAdmin ? renderAdminDashboard() : renderUserDashboard()}
+      </div>
     </div>
   );
 }
