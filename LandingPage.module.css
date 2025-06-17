@@ -1,0 +1,83 @@
+/* LandingPage.module.css */
+.container {
+    min-height: 100vh;
+    flex-direction: column;
+    background: linear-gradient(to bottom right, #1a202c, #2d3748);
+    color: white;
+  }
+  
+  .header {
+    backdrop-filter: blur(10px);
+    background-color: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  .hero {
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+    padding: 2.5rem 1rem;
+    position: relative;
+    overflow: hidden;
+    min-height: 50vh;
+  }
+  
+  .gridBackground {
+    background-image: url('/grid.svg');
+    opacity: 0.1;
+  }
+  
+  .gradientBackground {
+    background: linear-gradient(to bottom right, rgba(79, 70, 229, 0.1), rgba(168, 85, 247, 0.1), rgba(236, 72, 153, 0.1));
+  }
+  
+  .animatedGradient {
+    animation: gradientAnimation 10s ease infinite;
+  }
+  
+  @keyframes gradientAnimation {
+    0% {
+      background-position: 0% 0%;
+    }
+    100% {
+      background-position: 100% 100%;
+    }
+  }
+  
+  .footer {
+    background-color: rgba(31, 41, 55, 0.8);
+    border-top: 1px solid rgba(45, 55, 72, 0.8);
+    padding: 3rem 0;
+    overflow: hidden;
+  }
+  
+  .footerGridBackground {
+    background-image: url('/grid.svg');
+    opacity: 0.1;
+  }
+  
+  .float {
+    animation: float 12s ease-in-out infinite;
+  }
+  
+  .floatDelay1 {
+    animation: float 12s ease-in-out 2s infinite;
+  }
+  
+  .floatDelay2 {
+    animation: float 12s ease-in-out 4s infinite;
+  }
+  
+  @keyframes float {
+    0%, 100% {
+      transform: translateY(0) translateX(0);
+    }
+    50% {
+      transform: translateY(-20px) translateX(10px);
+    }
+  }
+  

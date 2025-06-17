@@ -5,6 +5,7 @@ import { Upload, Check, Loader2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { useState, useCallback, useEffect } from "react";
+import { toast } from "sonner";
 
 const UploadStep = ({
   files,
@@ -118,6 +119,37 @@ const UploadStep = ({
           }
           return updatedFiles;
         });
+
+        // Convert image to Base64 for prediction
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onloadend = async () => {
+          const base64Image = reader.result.split(",")[1];
+
+          try {
+            const predictionResponse = await fetch(
+              "https://api-inference.huggingface.co/models/google/vit-base-patch16-224",
+              {
+                method: "POST",
+                headers: {
+                  Authorization: `Bearer ${process.env.NEXT_PUBLIC_HUGGINGFACE_API_TOKEN}`,
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ inputs: base64Image, parameters: { top_k: 5 } }),
+              }
+            );
+
+            if (!predictionResponse.ok) {
+              throw new Error('Failed to classify image');
+            }
+
+            const predictionData = await predictionResponse.json();
+            setPredictions(predictionData);
+          } catch (error) {
+            console.error("Error classifying image:", error);
+            toast.error("Failed to classify image. Please try again.");
+          }
+        };
       }
     } catch (err) {
       console.error("Error uploading to Cloudinary:", err);

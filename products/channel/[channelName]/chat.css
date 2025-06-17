@@ -1,0 +1,13 @@
+/* styles/globals.css or styles/styles.css */
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+#__next {
+  height: 100%;
+  width: 100%;
+}

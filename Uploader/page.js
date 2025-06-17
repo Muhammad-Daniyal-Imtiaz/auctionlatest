@@ -4,55 +4,15 @@ import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { ChevronRight, ChevronLeft, Upload, ImageIcon, Tag, FileText, Moon, Sun, Sparkles, Leaf, Zap, Minimize2, Loader2 } from "lucide-react";
+import { ChevronRight, ChevronLeft, Upload, ImageIcon, Tag, FileText, Loader2 } from "lucide-react";
 import Stepper from "./upload/stepper";
 import UploadStep from "./upload/upl";
 import PreviewStep from "./upload/preview";
 import TagsStep from "./upload/tag";
 import DetailsStep from "./upload/details";
-import ThemeSwitcherComponent from "./upload/themes";
 import { useCopilotAction, useCopilotReadable } from '@copilotkit/react-core';
 import { CopilotPopup } from "@copilotkit/react-ui";
 import { toast } from "sonner";
-
-const themes = {
-  dark: {
-    name: "Dark Mode",
-    icon: Moon,
-    className: "theme-dark bg-zinc-900 text-zinc-100",
-    accent: "bg-indigo-500",
-  },
-  light: {
-    name: "Light Mode",
-    icon: Sun,
-    className: "theme-light bg-zinc-50 text-zinc-900",
-    accent: "bg-blue-500",
-  },
-  cyberpunk: {
-    name: "Cyberpunk",
-    icon: Sparkles,
-    className: "theme-cyberpunk bg-purple-950 text-pink-300",
-    accent: "bg-pink-500",
-  },
-  nature: {
-    name: "Nature",
-    icon: Leaf,
-    className: "theme-nature bg-emerald-950 text-emerald-100",
-    accent: "bg-emerald-500",
-  },
-  futuristic: {
-    name: "Futuristic",
-    icon: Zap,
-    className: "theme-futuristic bg-slate-900 text-sky-300",
-    accent: "bg-sky-500",
-  },
-  minimalist: {
-    name: "Minimalist",
-    icon: Minimize2,
-    className: "theme-minimalist bg-neutral-100 text-neutral-900 dark:bg-neutral-900 dark:text-neutral-100",
-    accent: "bg-neutral-500",
-  },
-};
 
 const mockAITags = [
   { name: "Electronics", confidence: 0.98 },
@@ -96,15 +56,10 @@ export default function ProductUploader() {
     category: "",
     sale_type: "fixed",
   });
-  const [theme, setTheme] = useState("light");
   const [isUploading, setIsUploading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
   const [predictions, setPredictions] = useState([]);
-
-  useEffect(() => {
-    document.body.className = themes[theme].className;
-  }, [theme]);
 
   useEffect(() => {
     if (currentStep === 2) {
@@ -149,6 +104,7 @@ export default function ProductUploader() {
       return;
     }
 
+    // Validate required fields
     if (!productDetails.name || !productDetails.description || !productDetails.price || !productDetails.category) {
       toast.error("Please fill in all required fields");
       return;
@@ -159,6 +115,7 @@ export default function ProductUploader() {
       return;
     }
 
+    // Additional validation for auctions
     if (productDetails.sale_type === "auction") {
       if (!productDetails.startDate || !productDetails.endDate) {
         toast.error("Please set auction start and end dates");
@@ -166,8 +123,12 @@ export default function ProductUploader() {
       }
 
       const now = new Date();
-      const startDateTime = new Date(`${productDetails.startDate.toISOString().split('T')[0]}T${productDetails.startTime}`);
-      const endDateTime = new Date(`${productDetails.endDate.toISOString().split('T')[0]}T${productDetails.endTime}`);
+      const startDateTime = new Date(
+        `${productDetails.startDate.toISOString().split('T')[0]}T${productDetails.startTime}`
+      );
+      const endDateTime = new Date(
+        `${productDetails.endDate.toISOString().split('T')[0]}T${productDetails.endTime}`
+      );
 
       if (startDateTime >= endDateTime) {
         toast.error("Auction end time must be after start time");
@@ -188,6 +149,7 @@ export default function ProductUploader() {
     setIsSubmitting(true);
 
     try {
+      // Prepare base product data
       const productData = {
         name: productDetails.name,
         description: productDetails.description,
@@ -204,10 +166,20 @@ export default function ProductUploader() {
           .map(file => file.cloudinaryUrl),
       };
 
+      // Add auction-specific data if needed
       if (productDetails.sale_type === "auction") {
+        // Format dates to ISO strings
+        const startDateISO = new Date(
+          `${productDetails.startDate.toISOString().split('T')[0]}T${productDetails.startTime}`
+        ).toISOString();
+
+        const endDateISO = new Date(
+          `${productDetails.endDate.toISOString().split('T')[0]}T${productDetails.endTime}`
+        ).toISOString();
+
         Object.assign(productData, {
-          start_date: productDetails.startDate.toISOString(),
-          end_date: productDetails.endDate.toISOString(),
+          start_date: startDateISO,
+          end_date: endDateISO,
           start_time: productDetails.startTime,
           end_time: productDetails.endTime,
           min_bid_increment: parseFloat(productDetails.minBidIncrement),
@@ -215,6 +187,7 @@ export default function ProductUploader() {
         });
       }
 
+      // Make API request
       const response = await fetch('/api/products', {
         method: 'POST',
         headers: {
@@ -411,22 +384,17 @@ export default function ProductUploader() {
   });
 
   return (
-    <div className="min-h-screen transition-colors duration-300">
+    <div className="min-h-screen bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 text-white">
       <div className="max-w-4xl mx-auto p-8 flex flex-col gap-8">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold">List Your Product</h1>
-          <ThemeSwitcherComponent
-            theme={theme}
-            setTheme={setTheme}
-            themes={themes}
-          />
+          <h1 className="text-4xl font-bold text-white">List Your Product</h1>
         </div>
 
         <div className="mb-8">
-          <Stepper steps={steps} currentStep={currentStep} theme={theme} />
+          <Stepper steps={steps} currentStep={currentStep} />
         </div>
 
-        <div className="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6 mb-6 flex-1 flex flex-col">
+        <div className="bg-white bg-opacity-10 rounded-xl shadow-lg p-6 mb-6 flex-1 flex flex-col backdrop-blur-md">
           <div className="flex-1">
             <AnimatePresence mode="wait">
               {stepContents[currentStep]}
@@ -439,7 +407,7 @@ export default function ProductUploader() {
             variant="outline"
             onClick={handlePrevious}
             disabled={currentStep === 0}
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 border-white text-white hover:bg-white hover:bg-opacity-20"
           >
             <ChevronLeft size={16} />
             Previous
@@ -452,7 +420,7 @@ export default function ProductUploader() {
               (currentStep === 1 && selectedImages.length === 0) ||
               isSubmitting
             }
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 bg-blue-600 text-white hover:bg-blue-700"
           >
             {isSubmitting ? (
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -472,13 +440,13 @@ export default function ProductUploader() {
         )}
 
         {predictions.length > 0 && (
-          <div className="mt-4 p-4 bg-white dark:bg-zinc-800 rounded-xl shadow-sm">
-            <h3 className="font-bold mb-2">AI Predictions:</h3>
+          <div className="mt-4 p-4 bg-white bg-opacity-10 rounded-xl shadow-md backdrop-blur-md">
+            <h3 className="font-bold mb-2 text-blue-600">AI Predictions:</h3>
             <ul className="space-y-2">
               {predictions.map((pred, index) => (
-                <li key={index} className="flex justify-between items-center p-2 bg-gray-50 dark:bg-zinc-700 rounded">
-                  <strong>{pred.label}</strong>
-                  <span>{(pred.score * 100).toFixed(2)}%</span>
+                <li key={index} className="flex justify-between items-center p-2 bg-white bg-opacity-20 rounded">
+                  <strong className="text-gray-800">{pred.label}</strong>
+                  <span className="text-blue-600">{(pred.score * 100).toFixed(2)}%</span>
                 </li>
               ))}
             </ul>

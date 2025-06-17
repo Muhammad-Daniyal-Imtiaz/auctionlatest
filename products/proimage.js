@@ -28,7 +28,7 @@ export default function ProductImages({ productData, currentImageIndex, setCurre
   const images = productData.images || [productData.image || '/placeholder-product.jpg'];
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 relative overflow-hidden group">
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 border-2xl p-4 relative overflow-hidden group">
       <div
         className="aspect-square w-full flex items-center justify-center relative cursor-zoom-in"
         onMouseEnter={() => setIsZoomed(true)}

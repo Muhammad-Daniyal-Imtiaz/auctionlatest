@@ -1,13 +1,13 @@
-'use client'
+'use client';
 import { motion, AnimatePresence } from "framer-motion";
 import { Tag, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 
-const TagsStep = ({ 
-  aiTags, 
-  selectedTags, 
+const TagsStep = ({
+  aiTags,
+  selectedTags,
   toggleTagSelection,
   setSelectedTags
 }) => {
@@ -35,8 +35,8 @@ const TagsStep = ({
       className="flex flex-col gap-6"
     >
       <div className="text-center mb-6">
-        <h2 className="text-2xl font-bold mb-2">AI-Generated Tags</h2>
-        <p className="text-gray-500">Our AI has analyzed your images and suggested these tags</p>
+        <h2 className="text-2xl font-bold mb-2 text-black">AI-Generated Tags</h2>
+        <p className="text-gray-700">Our AI has analyzed your images and suggested these tags</p>
       </div>
 
       <div className="flex flex-wrap gap-2">
@@ -51,7 +51,7 @@ const TagsStep = ({
               className={`flex items-center gap-2 px-3 py-1.5 rounded-full cursor-pointer transition-colors ${
                 selectedTags.includes(tag.name)
                   ? "bg-primary text-white"
-                  : "bg-gray-200 text-gray-500"
+                  : "bg-gray-200 text-black"
               }`}
             >
               <span>{tag.name}</span>
@@ -71,7 +71,7 @@ const TagsStep = ({
 
       {aiTags.length > 0 && (
         <div className="flex justify-between items-center pt-4">
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-gray-700">
             {selectedTags.length} of {aiTags.length} tags selected
           </p>
           <div className="flex gap-2">
@@ -86,7 +86,7 @@ const TagsStep = ({
       )}
 
       <div className="pt-4 border-t border-gray-200">
-        <label htmlFor="custom-tags" className="block mb-2">
+        <label htmlFor="custom-tags" className="block mb-2 text-black">
           Add Custom Tags
         </label>
         <div className="flex gap-2">
@@ -96,6 +96,7 @@ const TagsStep = ({
             value={customTag}
             onChange={(e) => setCustomTag(e.target.value)}
             onKeyDown={handleKeyDown}
+            className="text-black"
           />
           <Button variant="secondary" onClick={handleAddCustomTag}>Add</Button>
         </div>

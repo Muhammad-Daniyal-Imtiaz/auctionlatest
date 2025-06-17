@@ -1,11 +1,13 @@
 'use client';
-import { useState, useEffect } from "react";
+import { useState, useEffect } from 'react';
+import supabase from '../../Supabase/config';
 import { Skeleton } from "@/components/ui/skeleton";
 import { ChevronRight, Info, HardDrive, Star, StarHalf, Truck, RotateCwIcon, ShieldHalfIcon, Check } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import ProductBidding from "./ProductBidding";
+import ProductBidding from "../ProductBidding";
 import { useUser } from '@clerk/clerk-react';
+import { useParams } from 'next/navigation';
 
 // Define ProductImages component within the same file
 function ProductImages({ productData, currentImageIndex, setCurrentImageIndex }) {
@@ -104,8 +106,9 @@ function ProductImages({ productData, currentImageIndex, setCurrentImageIndex })
   );
 }
 
-// Define ProductFetcher component within the same file
-function ProductFetcher({ productId, children }) {
+export default function ModernProductPage() {
+  const { proid } = useParams();
+  const { isLoaded, isSignedIn, user } = useUser();
   const [productData, setProductData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -115,7 +118,7 @@ function ProductFetcher({ productId, children }) {
       setLoading(true);
       setError(null);
 
-      const response = await fetch(`/api/biddetails?productId=${productId}`);
+      const response = await fetch(`/api/biddetails2?productId=${proid}`);
       const data = await response.json();
 
       if (response.ok) {
@@ -133,7 +136,15 @@ function ProductFetcher({ productId, children }) {
 
   useEffect(() => {
     fetchProductWithDetails();
-  }, [productId]);
+  }, [proid]);
+
+  if (!isLoaded) {
+    return <div className="flex items-center justify-center h-screen">Loading...</div>;
+  }
+
+  if (!isSignedIn) {
+    return <div className="flex items-center justify-center h-screen">Please sign in to view this product</div>;
+  }
 
   if (loading && !productData) {
     return <div className="p-4 text-center">Loading product data...</div>;
@@ -157,38 +168,14 @@ function ProductFetcher({ productId, children }) {
     return <div className="p-4 text-center">Product not found</div>;
   }
 
-  return children({
-    productData,
-    loading,
-    error,
-    refreshData: fetchProductWithDetails
-  });
-}
-
-export default function ModernProductPage({ params }) {
-  const productId = params.id || '05fb98be-f982-42d5-b9c9-bcf0f3b9cf30';
-  const { isLoaded, isSignedIn, user } = useUser();
-
-  if (!isLoaded) {
-    return <div className="flex items-center justify-center h-screen">Loading...</div>;
-  }
-
-  if (!isSignedIn) {
-    return <div className="flex items-center justify-center h-screen">Please sign in to view this product</div>;
-  }
-
   return (
-    <ProductFetcher productId={productId}>
-      {({ productData, loading, error }) => (
-        <ProductContent
-          productData={productData}
-          loading={loading}
-          error={error}
-          productId={productId}
-          clerkId={user.id}
-        />
-      )}
-    </ProductFetcher>
+    <ProductContent
+      productData={productData}
+      loading={loading}
+      error={error}
+      productId={proid}
+      clerkId={user.id}
+    />
   );
 }
 

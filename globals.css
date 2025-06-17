@@ -1,146 +1,23 @@
 @import "tailwindcss";
 
-/* Global CSS Variables */
-:root {
-  --radius: 0.5rem;
-  --sidebar-width: 16rem;
-  --sidebar-collapsed-width: 5rem;
-  --header-height: 4rem;
-  
-  /* Light mode colors */
-  --background: 0 0% 100%;
-  --foreground: 222.2 84% 4.9%;
-  --card: 0 0% 100%;
-  /* ... other light mode colors ... */
-
-  /* Dark mode colors */
-  --background-dark: 222.2 84% 4.9%;
-  --foreground-dark: 210 40% 98%;
-  --card-dark: 222.2 84% 4.9%;
-  /* ... other dark mode colors ... */
+/* Ensure these styles do not conflict with LandingPage styles */
+.bg-float {
+  animation: float 12s ease-in-out infinite;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: var(--background-dark);
-    --foreground: var(--foreground-dark);
-    --card: var(--card-dark);
-    /* ... other dark mode overrides ... */
+.bg-float-delay-1 {
+  animation: float 12s ease-in-out 2s infinite;
+}
+
+.bg-float-delay-2 {
+  animation: float 12s ease-in-out 4s infinite;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0) translateX(0);
   }
-}
-
-/* Base Layout Structure */
-html, body, #__next {
-  height: 100%;
-  width: 100%;
-  margin: 0;
-  padding: 0;
-  overflow: hidden;
-}
-
-/* Main App Container */
-.app-container {
-  display: flex;
-  height: 100vh;
-  width: 100vw;
-  overflow: hidden;
-}
-
-/* Sidebar Styles */
-.sidebar {
-  width: var(--sidebar-width);
-  min-width: var(--sidebar-width);
-  height: 100vh;
-  transition: width 0.3s ease;
-  overflow-y: auto;
-}
-
-.sidebar-collapsed {
-  width: var(--sidebar-collapsed-width);
-  min-width: var(--sidebar-collapsed-width);
-}
-
-/* Main Content Area */
-.main-content {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-  overflow: hidden;
-  width: calc(100vw - var(--sidebar-width));
-}
-
-.main-content-expanded {
-  width: calc(100vw - var(--sidebar-collapsed-width));
-}
-
-/* Header */
-.header {
-  height: var(--header-height);
-  width: 100%;
-  position: sticky;
-  top: 0;
-  z-index: 10;
-}
-
-/* Page Content */
-.page-content {
-  flex: 1;
-  overflow-y: auto;
-  width: 100%;
-  padding: 1rem;
-}
-
-/* Responsive Behavior */
-@media (max-width: 1024px) {
-  .sidebar {
-    position: fixed;
-    z-index: 50;
-    transform: translateX(-100%);
+  50% {
+    transform: translateY(-20px) translateX(10px);
   }
-  
-  .sidebar-open {
-    transform: translateX(0);
-  }
-  
-  .main-content, .main-content-expanded {
-    width: 100vw;
-  }
-}
-
-/* Utility Classes */
-.min-w-0 {
-  min-width: 0;
-}
-
-/* Animation Keyframes */
-@keyframes accordion-down {
-  from { height: 0; }
-  to { height: var(--radix-accordion-content-height); }
-}
-
-@keyframes accordion-up {
-  from { height: var(--radix-accordion-content-height); }
-  to { height: 0; }
-}
-
-.accordion-down {
-  animation: accordion-down 0.2s ease-out;
-}
-
-.accordion-up {
-  animation: accordion-up 0.2s ease-out;
-}
-
-/* Border Radius Utilities */
-.rounded-lg {
-  border-radius: var(--radius);
-}
-
-.rounded-md {
-  border-radius: calc(var(--radius) * 0.75);
-}
-
-.rounded-sm {
-  border-radius: calc(var(--radius) * 0.5);
 }

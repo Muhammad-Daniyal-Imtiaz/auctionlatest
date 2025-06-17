@@ -1,15 +1,14 @@
-import { NextResponse } from 'next/server';
 import supabase from '../../../Supabase/config';
 
-export async function POST(request: Request) {
+export async function POST(request) {
   try {
     const { productId, clerkId, amount, userAvatar, userName } = await request.json();
 
     if (!productId || !clerkId || typeof amount !== 'number' || amount <= 0) {
-      return NextResponse.json(
-        { error: 'Invalid bid details' },
-        { status: 400 }
-      );
+      return new Response(JSON.stringify({ error: 'Invalid bid details' }), { 
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
     }
 
     const currentTime = new Date().toISOString();
@@ -53,15 +52,15 @@ export async function POST(request: Request) {
       if (insertError) throw insertError;
     }
 
-    return NextResponse.json(
-      { message: 'Bid placed successfully' },
-      { status: 201 }
-    );
+    return new Response(JSON.stringify({ message: 'Bid placed successfully' }), { 
+      status: 201,
+      headers: { 'Content-Type': 'application/json' }
+    });
   } catch (err) {
     console.error('Bid placement error:', err);
-    return NextResponse.json(
-      { error: 'Failed to place bid' },
-      { status: 500 }
-    );
+    return new Response(JSON.stringify({ error: err.message || 'Failed to place bid' }), { 
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
   }
 }

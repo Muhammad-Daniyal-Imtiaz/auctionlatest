@@ -24,7 +24,7 @@ const PreviewStep = ({
       </div>
 
       {files.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {files.map((file, index) => {
             const isSelected = selectedImages.includes(index);
 
@@ -33,14 +33,14 @@ const PreviewStep = ({
                 key={index}
                 whileHover={{ scale: 1.03 }}
                 className={`relative rounded-md overflow-hidden border-2 ${
-                  isSelected ? "border-primary ring-2 ring-primary ring-offset-2" : "border-gray-200 dark:border-gray-700"
+                  isSelected ? "border-blue-500" : "border-gray-200 dark:border-gray-700"
                 } transition-all`}
                 onMouseEnter={() => setHoveredIndex(index)}
                 onMouseLeave={() => setHoveredIndex(null)}
               >
                 <div className="relative aspect-square bg-gray-100 dark:bg-gray-900">
                   {isSelected && (
-                    <div className="absolute inset-0 bg-primary/10 z-10" />
+                    <div className="absolute inset-0 bg-blue-500/10 z-10" />
                   )}
 
                   <div className="w-full h-full flex items-center justify-center">
@@ -70,7 +70,7 @@ const PreviewStep = ({
                         }}
                         className={`p-2 rounded-full ${
                           isSelected
-                            ? "bg-primary text-white"
+                            ? "bg-blue-500 text-white"
                             : "bg-white/80 text-gray-700 hover:bg-white/100"
                         } transition-colors`}
                       >

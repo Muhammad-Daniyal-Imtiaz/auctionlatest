@@ -1,5 +1,3 @@
-'use client'
-
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,10 +5,15 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useRouter } from 'next/navigation';
 import supabase from "../Supabase/config";
 import { useUser } from '@clerk/clerk-react';
-import fetchBids from './fetchBids';
-import placeBid from './placeBid';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter
+} from '@/components/ui/dialog';
 
-// ActiveLink Component
 function ActiveLink({ children, href, onClick }) {
   const router = useRouter();
   const style = {
@@ -44,6 +47,11 @@ export default function ProductBidding({ productId, clerkId }) {
     placing: false
   });
   const [error, setError] = useState(null);
+  const [showBidError, setShowBidError] = useState(false);
+  const [bidErrorData, setBidErrorData] = useState({
+    message: '',
+    currentMax: 0
+  });
   const { user } = useUser();
   const router = useRouter();
 
@@ -52,7 +60,12 @@ export default function ProductBidding({ productId, clerkId }) {
       setLoading(prev => ({ ...prev, fetching: true }));
       setError(null);
 
-      const { success, bids, error } = await fetchBids(productId);
+      const response = await fetch(`/api/bids?productId=${productId}`);
+      const { success, bids, error } = await response.json();
+
+      if (!response.ok) {
+        throw new Error(error || 'Failed to fetch bids');
+      }
 
       if (success) {
         setBids(bids);
@@ -70,8 +83,8 @@ export default function ProductBidding({ productId, clerkId }) {
   const handlePlaceBid = async () => {
     try {
       const stringProductId = typeof productId === 'object' ? productId.id : productId;
-
       const amount = parseFloat(bidAmount);
+
       if (isNaN(amount)) {
         setError('Please enter a valid number');
         return;
@@ -85,16 +98,36 @@ export default function ProductBidding({ productId, clerkId }) {
       setLoading(prev => ({ ...prev, placing: true }));
       setError(null);
 
-      const { success, error } = await placeBid({
-        productId: stringProductId,
-        clerkId,
-        amount,
-        userAvatar: user?.imageUrl || `https://avatar.vercel.sh/${clerkId}.png`,
-        userName: user?.username || user?.fullName || `User${clerkId.slice(0, 4)}`
+      const response = await fetch('/api/bids', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          productId: stringProductId,
+          clerkId,
+          amount,
+          userAvatar: user?.imageUrl || `https://avatar.vercel.sh/${clerkId}.png`,
+          userName: user?.username || user?.fullName || `User${clerkId.slice(0, 4)}`
+        }),
       });
 
-      if (!success) {
-        throw new Error(error);
+      const result = await response.json();
+
+      if (!response.ok) {
+        if (result.error === 'Bid too low') {
+          setBidErrorData({
+            message: result.details.message,
+            currentMax: result.details.currentMaxBid
+          });
+          setShowBidError(true);
+          return;
+        }
+        throw new Error(result.error || 'Failed to place bid');
+      }
+
+      if (!result.success) {
+        throw new Error(result.error);
       }
 
       setBidAmount('');
@@ -107,38 +140,62 @@ export default function ProductBidding({ productId, clerkId }) {
     }
   };
 
-  const handleAvatarClick = async (selectedUserId) => {
-    const sortedIds = [user.id, selectedUserId].sort((a, b) => b - a);
-    const sumIds = sortedIds.reduce((a, b) => a + b, 0);
-    const channelName = `${sortedIds[0]}${sortedIds[1]}${sumIds}`;
+  const generateChannelName = (id1, id2) => {
+    const sortedIds = [id1, id2].sort((a, b) => b - a);
+    const sum = sortedIds[0] + sortedIds[1];
+    return `${sortedIds[0]}${sortedIds[1]}${sum}`;
+  };
 
-    // Check if the channel already exists
-    const { data, error } = await supabase
-      .from('channels')
-      .select('id')
-      .eq('channel_name', channelName)
-      .single();
-
-    if (error) {
-      console.error('Error checking channel:', error);
-      return;
-    }
-
-    if (data) {
-      // Channel exists, navigate to the channel
-      router.push(`/channel/${channelName}`);
-    } else {
-      // Channel does not exist, create it
-      const { error: insertError } = await supabase
-        .from('channels')
-        .insert([{ channel_name: channelName, user1_id: sortedIds[0], user2_id: sortedIds[1] }]);
-
-      if (insertError) {
-        console.error('Error creating channel:', insertError);
-      } else {
-        // Navigate to the newly created channel
-        router.push(`/channel/${channelName}`);
+  const handleAvatarClick = async (bidderClerkId) => {
+    try {
+      setError(null);
+      const userData = JSON.parse(localStorage.getItem('userData'));
+      if (!userData || !userData.id) {
+        throw new Error('Sender ID not found in local storage');
       }
+      const senderId = userData.id;
+
+      const { data: receiverData, error: receiverError } = await supabase
+        .from('users')
+        .select('id')
+        .eq('clerk_id', bidderClerkId)
+        .single();
+
+      if (receiverError || !receiverData) {
+        throw new Error('Could not find user information');
+      }
+
+      const receiverId = receiverData.id;
+      const channelName = generateChannelName(senderId, receiverId);
+
+      const { data: existingChannel } = await supabase
+        .from('channels')
+        .select('id')
+        .eq('channel_name', channelName)
+        .maybeSingle();
+
+      if (existingChannel) {
+        router.push(`/products/channel/${channelName}`);
+        return;
+      }
+
+      const { error: createError } = await supabase
+        .from('channels')
+        .insert({
+          channel_name: channelName,
+          user1_id: senderId,
+          user2_id: receiverId
+        });
+
+      if (createError) {
+        console.log('Channel creation note:', createError.message);
+      }
+
+      router.push(`/products/channel/${channelName}`);
+
+    } catch (err) {
+      console.log('Error handling avatar click:', err.message);
+      setError('Could not start chat. Please try again.');
     }
   };
 
@@ -185,7 +242,7 @@ export default function ProductBidding({ productId, clerkId }) {
   }
 
   return (
-    <div className="bg-white rounded-lg p-6 space-y-4 border">
+    <div className="bg-white rounded-lg p-6 space-y-4 border relative">
       <h2 className="text-xl font-bold">Place Your Bid</h2>
 
       {error && (
@@ -220,7 +277,7 @@ export default function ProductBidding({ productId, clerkId }) {
             bids.map((bid) => (
               <div key={bid.id} className="border-b pb-2">
                 <div className="flex items-center gap-2 mb-1">
-                  <ActiveLink href={`#`} onClick={() => handleAvatarClick(bid.user_id)}>
+                  <ActiveLink href={`#`} onClick={() => handleAvatarClick(bid.clerk_id)}>
                     <Avatar className="h-8 w-8">
                       <AvatarImage src={bid.avatar} />
                       <AvatarFallback>
@@ -249,6 +306,41 @@ export default function ProductBidding({ productId, clerkId }) {
           )}
         </div>
       </div>
+
+      {/* Bid Error Dialog with Dark Colors and Bold Text */}
+      <Dialog open={showBidError} onOpenChange={setShowBidError}>
+        <DialogContent className="bg-gray-800 text-white">
+          <DialogHeader>
+            <DialogTitle className="font-bold">Bid Too Low</DialogTitle>
+            <DialogDescription className="font-bold">
+              {bidErrorData.message}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-center text-lg font-bold">
+              Current highest bid: ${bidErrorData.currentMax.toFixed(2)}
+            </p>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              className="border-white text-white hover:bg-gray-700"
+              onClick={() => {
+                setShowBidError(false);
+                setBidAmount((bidErrorData.currentMax + 0.01).toFixed(2));
+              }}
+            >
+              Bid ${(bidErrorData.currentMax + 0.01).toFixed(2)}
+            </Button>
+            <Button
+              className="bg-gray-700 hover:bg-gray-600"
+              onClick={() => setShowBidError(false)}
+            >
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
